@@ -20,8 +20,8 @@ void CSE321_LCD::begin() {
 
   // Initialize displayfunction parameter for setting up LCD display
   _displayfunction |= LCD_2LINE;
-  // _displayfunction |= LCD_5x10DOTS;
-  _displayfunction |= LCD_5x8DOTS;
+  _displayfunction |= LCD_5x10DOTS;
+
 
   // Wait for more than 30 ms after power rises above 4.5V per the data sheet
   thread_sleep_for(50);
@@ -41,7 +41,7 @@ void CSE321_LCD::begin() {
   setReg(0, 0);
   setReg(1, 0);
   setReg(0x08, 0xAA);
-  printf("HERE\n");
+  
   //   }
 }
 
