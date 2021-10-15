@@ -38,7 +38,7 @@ Resources and References
 --------------------
 * [STM32 Nucleo-144 boards](https://www.st.com/resource/en/user_manual/dm00244518-stm32-nucleo144-boards-mb1137-stmicroelectronics.pdf)
 * [RM0432](https://www.st.com/resource/en/reference_manual/dm00310109-stm32l4-series-advanced-armbased-32bit-mcus-stmicroelectronics.pdf)
-* [Ticker]((https://os.mbed.com/docs/mbed-os/v6.15/apis/ticker.html))
+* [Ticker](https://os.mbed.com/docs/mbed-os/v6.15/apis/ticker.html)
 
 --------------------
 Getting Started
@@ -51,6 +51,7 @@ Getting Started
 6. Use the keypad for user input.
 
 <br/>
+
 --------------------
 CSE321_project2_jessebot_main.cpp:
 --------------------
@@ -98,6 +99,7 @@ Custom Functions
 
 
 <br/>
+
 --------------------
 CSE321_project2_jessebot_timer.cpp:
 --------------------
@@ -127,6 +129,7 @@ Custom Functions
     * Returns the timer value if the format m:ss.  This also sets the str value in the timer struct.
 
  <br/>
+ 
 --------------------
 CSE321_project2_jessebot_keypad.cpp:
 --------------------
