@@ -43,7 +43,7 @@
 #include "mbed.h"
 #include "1802.h"
 #include "CSE321_project2_jessebot_timer.h"
-#include "keypad.h"
+#include "CSE321_project2_jessebot_keypad.h"
 
 #define LCD_COLS 16
 #define LCD_ROWS 2
