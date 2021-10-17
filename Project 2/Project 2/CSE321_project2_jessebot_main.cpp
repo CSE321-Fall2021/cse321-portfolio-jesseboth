@@ -44,6 +44,7 @@
 #include "1802.h"
 #include "CSE321_project2_jessebot_timer.h"
 #include "CSE321_project2_jessebot_keypad.h"
+#include "CSE321_project2_jessebot_gpio.h"
 
 #define LCD_COLS 16
 #define LCD_ROWS 2
@@ -57,42 +58,92 @@ InterruptIn Column2(PE_9);
 InterruptIn Column3(PF_13);
 
 char timer_flag;
-char row = 0;
+char press_flag = 0;    // allows key press to function when set
+char press_pause = 0;   // delays keypress
+char row = 0;           // row selection set
+char timer_cursor = 6;
+char digit_num = 0;
+char pressed = 0;
+char new_state = 1;
+char state = 0;
+int inc_by = -1;       // default to decrease
+/*   state:
+        0 - do nothing wait for 'D'
+        1 - input digits m:ss
+        2 - wait for 'A' and 'C'
+        3 - count down - check for 'B'
+*/
 
 void timer_isr(){
     timer_flag = 1;
-    inc_timer(1);
+    inc_timer();
+    if(goal_timer()){
+        set_inc_by_timer(0);
+    }
 }
 void column0_isr(){
-    printf("0, %d\n", row);
+    if(press_flag){
+        press_pause = PAUSE_FOR;
+        press_flag = 0;
+        char c = get_char_keypad(row, 0);
+
+        if(state == 1 && c != '*' && (digit_num != 1 || (digit_num == 1 && c < '6'))){
+                set_press_timer(c);
+                set_key(c);
+            
+        }
+    }
 }
 void column1_isr(){
-    printf("1, %d\n", row);
+    if(press_flag){
+        press_pause = PAUSE_FOR;
+        press_flag = 0;
+        char c = get_char_keypad(row, 1);
+
+        if(state == 1 && (digit_num != 1 || (digit_num == 1 && c < '6'))){
+            set_press_timer(c);
+            set_key(c);
+        }
+    }
 }
 void column2_isr(){
-    printf("2, %d\n", row);
+    if(press_flag){
+        press_pause = PAUSE_FOR;
+        press_flag = 0;
+        char c = get_char_keypad(row, 2);
+    
+        if(state == 1 && c != '#' && (digit_num != 1 || (digit_num == 1 && c < '6'))){
+            set_press_timer(c);
+            set_key(c);
+        }
+    }
 }
 void column3_isr(){
-    printf("3, %d\n", row);
+    if(press_flag){
+        press_pause = PAUSE_FOR;
+        press_flag = 0;
+        char c = get_char_keypad(row, 3);
+
+        if(state == 0 && c == 'D'){
+            state = 1;
+            new_state = 1;
+            timer_cursor = 6;
+            pressed = 0;
+        }
+        else if(state == 2){
+            if(c == 'C'){}          //TODO
+            else if(c == 'A'){
+                set_inc_by_timer(inc_by); 
+                state = 3;
+            }
+        }
+        else if(state == 3 && c == 'B'){
+            set_inc_by_timer(0);
+            state = 2;
+        }
+    }
 }
 
-
-/*
-    Keypad Matrix Config
-
-    COL
-    pin 1 - PF_13
-    pin 2 - PE_9
-    pin 3 - PE_11
-    pin 4 - PF_14
-    
-    ROW
-    pin 5 - PE_13
-    pin 6 - PF_15
-    pin 7 - PD_8
-    pin 8 - PD_9
-
-*/
 int main()
 {
     TIME.attach(&timer_isr, 1s);
@@ -102,67 +153,83 @@ int main()
     Column3.rise(&column3_isr);
 
     LCD.begin();
-    set_timer(9, 30);
+    set_timer(0, 30);
 
     /* enable ports (DEF) */
-    RCC->AHB2ENR |= 0x38;
+    gpio_enable((char*)"DEF");
 
-    /* set 0's for output */
-    GPIOE->MODER &= ~(0x8000000);
-    GPIOF->MODER &= ~(0x80000000);
-    GPIOD->MODER &= ~(0xA0000);
-
-    /* set 1's for output */
-    GPIOE->MODER |= (0x4000000);
-    GPIOF->MODER |= (0x40000000);
-    GPIOD->MODER |= (0x50000);
+    /* set MODER */
+    gpio_moder(GPIOE, 13, GPIO_OUTPUT);     // set PE_13 to output
+    gpio_moder(GPIOF, 15, GPIO_OUTPUT);     // set PF_15 to output
+    gpio_moder(GPIOD, 8,  GPIO_OUTPUT);     // set PD_8 to output
+    gpio_moder(GPIOD, 9,  GPIO_OUTPUT);     // set PD_9 to output
 
     while (true) {
-        if(timer_flag){            
-            LCD.clear();
-            LCD.setCursor(0, 0);
-            LCD.print("Hello World");
-        
-            LCD.setCursor(6, 1);
-            LCD.print(string_timer());
 
-            timer_flag = 0;
+        if(state == 1){
+            if (new_state){   
+                LCD.clear();
+                LCD.setCursor(2, 0);
+                LCD.print("Enter a time:");
+                LCD.setCursor(6, 1);
+
+                LCD.print("m:ss");
+                new_state = 0;
+            }
+            else if(get_key()[0] != 0 && digit_num < 3){
+                LCD.setCursor(timer_cursor, 1);
+                LCD.print(get_key());
+
+                if(timer_cursor == 6)   {timer_cursor+=2;}
+                else if(timer_cursor<9) {timer_cursor++; }
+
+                digit_num++;
+                set_key(0);
+            }
+            if(digit_num == 3){
+                decode_timer();
+                new_state = 1;
+                state = 2;
+            }
+        }
+        else if(state == 2){
+            if (new_state){
+                LCD.setCursor(0, 0);
+                LCD.print("Press 'A' or 'C'");
+                new_state = 0;
+            }
+        }
+        else if(state == 3){
+            if(timer_flag){            
+                LCD.clear();
+
+                LCD.setCursor(0, 0);
+                LCD.print("Time Remaining:");
+                LCD.setCursor(6, 1);
+                LCD.print(string_timer());
+                timer_flag = 0;
+
+                if(goal_timer()){
+                    LCD.clear();
+                    LCD.setCursor(4, 0);
+                    LCD.print("Times Up");
+                }
+            }
+        }
+        else{
+            if(new_state){            
+                LCD.clear();
+                LCD.setCursor(2, 0);
+                LCD.print("Press 'D' to");
+                LCD.setCursor(2, 1);
+                LCD.print("enter a time");
+            }
         }
 
-        // pin 5 - PE_13 -> row 4
-        // pin 6 - PF_15 -> row 3
-        // pin 7 - PD_8  -> row 2
-        // pin 8 - PD_9  -> row 1
-        row++;
-        if(row == 0){
-            GPIOE->ODR &= ~(0x2000);
-            GPIOF->ODR &= ~(0x8000);
-            GPIOD->ODR &= ~(0x100);
-            GPIOD->ODR |= 0x200;
-            thread_sleep_for(10);
-        }
-        else if(row == 1){
-            GPIOE->ODR &= ~(0x2000);
-            GPIOF->ODR &= ~(0x8000);
-            GPIOD->ODR |= 0x100;
-            GPIOD->ODR &= ~(0x200);
-            thread_sleep_for(10);
-        }
-        else if(row == 2){
-            GPIOE->ODR &= ~(0x2000);
-            GPIOF->ODR |= 0x8000;
-            GPIOD->ODR &= ~(0x100);
-            GPIOD->ODR &= ~(0x200);
-            thread_sleep_for(10);
-        }
-        else {
-            GPIOE->ODR |= 0x2000;
-            GPIOF->ODR &= ~(0x8000);
-            GPIOD->ODR &= ~(0x100);
-            GPIOD->ODR &= ~(0x200);
-            thread_sleep_for(10);
-            row=-1;
-        }
+        set_row_keypad(&++row); // (also sleeps for 10ms)
+        delay_keypad(&press_pause, &press_flag);
     }
 }
+
+
 
