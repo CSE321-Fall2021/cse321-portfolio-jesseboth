@@ -29,7 +29,7 @@ struct timer{
     char str[6];        // mm:ss
     char min_goal = 0;  // default 0
     char sec_goal = 0;  // default 0 
-    char press[5];      // mss
+    char press[6];      // mss
     char press_i = 0;
 } timer;
 
@@ -107,6 +107,22 @@ char *string_timer(){
     return timer.str;
 }
 
+void int_timer(){
+    if(string_length(timer.press) < TIMER_MAX_LEN){
+        timer.minutes = string_to_int_wlen(timer.str, 1);
+        timer.seconds = string_to_int_wlen(timer.str+2, 2);
+    }
+    else if(string_length(timer.press) == TIMER_MAX_LEN){
+        timer.minutes = string_to_int_wlen(timer.str, 2);
+        timer.seconds = string_to_int_wlen(timer.str+3, 2);
+    }
+    
+    if(timer.seconds > 59){
+        timer.minutes++;
+        timer.seconds-=60;
+    }
+}
+
 /* sets the value for incrementation 
 intput:
         by - +1 or -1
@@ -116,9 +132,11 @@ void set_inc_by_timer(int by){
 }
 
 void set_press_timer(char c){
-    if(timer.press_i < 3){
+    if(timer.press_i == 0 && c == '0'){}
+    else if(timer.press_i < TIMER_MAX_LEN){
         timer.press[timer.press_i++] = c;
     }
+    printf("%s\n", timer.press);
 }
 
 void reset_press_timer(){
@@ -127,42 +145,58 @@ void reset_press_timer(){
     }
 }
 
-void decode_timer(){
-    if(strlen(timer.press) == 3){
-        timer.str[0] = timer.press[0];
-        timer.minutes = string_to_int(timer.str);
-        timer.str[1] = ':';
-        timer.str[2] = timer.press[1];
-        timer.str[3] = timer.press[2];
-        timer.seconds = string_to_int(timer.str+2);
-        
+char *output_press_timer(){
+    // mm:ss
+    int i, cur, end, colon;  
+    if(timer.press_i < TIMER_MAX_LEN){
+        i = 0;
+        cur = 3;
+        end = timer.press_i-1;
+        colon = 1;
+
+    }
+    else if(timer.press_i == TIMER_MAX_LEN){
+        i = 0;
+        cur = 4;
+        end = timer.press_i-1;
+        colon = 2;
     }
     else{
-        timer.str[0] = timer.press[0];
-        timer.str[1] = timer.press[1];
-        timer.minutes = string_to_int(timer.str);
-        timer.str[2] = ':';
-        timer.str[3] = timer.press[2];
-        timer.str[4] = timer.press[3];
-        timer.seconds = string_to_int(timer.str+3);
+        return (char *)0;
     }
+
+    while(i<timer.press_i){
+        timer.str[cur--] = timer.press[end--];
+        i++;
+        if(cur == colon){
+            timer.str[cur--] = ':';
+        }
+    }
+    while(cur >= 0){
+        timer.str[cur--] = '0';
+        if(cur == colon){
+            timer.str[cur--] = ':';
+        }
+    }
+    return timer.str;
 }
 
-int string_to_int(char *str){
-    int mult = 1;
-    char *cpy = str-1; 
-    str += string_length(str)-1;
-    int ret = 0;
-    while(str != cpy){
-        ret += (*str - '0')*mult;
-        mult*=10;
-        str--;
-    }
-    return ret;
+void swap_timer(){
+    int temp_m, temp_s;
+    temp_m = timer.min_goal;
+    temp_s = timer.sec_goal;
+    timer.min_goal = timer.minutes;
+    timer.sec_goal = timer.seconds;
+    timer.minutes = temp_m;
+    timer.seconds = temp_s;
 }
 
-int string_length(char *str){
-    int i;
-    for(i=0; *str != 0; i++, str++);
-    return i;
+void reset_timer(){
+    reset_press_timer();
+    timer.minutes = 0;
+    timer.seconds = 0;
+    timer.inc_by = 0;
+    timer.min_goal = 0;
+    timer.sec_goal = 0;
+    timer.press_i = 0;
 }
