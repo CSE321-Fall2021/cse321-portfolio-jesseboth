@@ -49,10 +49,12 @@ void set_row_keypad(char *row){
 
 void delay_keypad(char *pause, char *flag){
     if(*pause>0){
+        gpio_on(GPIOA, 5);
         (*pause)--;
     }
     else{
         *flag = 1;
+        gpio_off(GPIOA, 5);
     }
 }
 
