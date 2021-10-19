@@ -69,7 +69,7 @@ char state = 0;
 /*   state:
         0 - do nothing wait for 'D' - 'B' turns off alarm
         1 - input digits m:ss, wait for A or C
-        2 - paused
+        2 - paused 'A' starts timer, 'B' resets
         3 - count down - check for 'B'
         4 - make LEDs blink;
 */
@@ -138,7 +138,13 @@ void column3_isr(){
             if(c == 'C' && state == 1){
                 c_flag = 1;
                 inc_by *= -1;
-            }   
+            }  
+            if(c == 'B' && state == 2){
+                new_state = 1;
+                reset_timer();
+                inc_by = -1;
+                state = 0;
+            }
             else if(c == 'A'){
                 set_inc_by_timer(inc_by); 
                 if(state == 1){
@@ -215,21 +221,15 @@ int main()
         }
         else if(state == 2){
             if (new_state){
-                new_state = 1;
-                reset_timer();
-                inc_by = -1;
-                state = 0;
+                LCD.clear();
+                LCD.setCursor(0, 0);
+                LCD.print("Paused:");
+
+                LCD.setCursor(TIMER_LOC, 1);
+                LCD.print(string_timer());
+
+                new_state = 0;
             }
-            // if (new_state){
-            //     LCD.clear();
-            //     LCD.setCursor(0, 0);
-            //     LCD.print("Paused:");
-
-            //     LCD.setCursor(TIMER_LOC, 1);
-            //     LCD.print(string_timer());
-
-            //     new_state = 0;
-            // }
         }
         else if(state == 3){
             if(new_state){
