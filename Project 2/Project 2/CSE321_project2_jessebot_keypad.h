@@ -18,7 +18,8 @@
 
 */
 #define PAUSE_FOR 25 //*10 ms
-
+#define KEYPAD_ROWS 4
+#define KEYPAD_COLS 4
 char get_char_keypad(char row, char col);
 void set_row_keypad(char *row);
 void delay_keypad(char *pause, char *flag);

@@ -61,14 +61,13 @@ char timer_flag;
 char press_flag = 0;    // allows key press to function when set
 char press_pause = 0;   // delays keypress
 char row = 0;           // row selection set
-char digit_num = 0;
-char pressed = 0;
 char new_state = 1;
 int inc_by = -1;       // default to decrease
+int blinky = 0;
 char c_flag = 0;
 char state = 0;
 /*   state:
-        0 - do nothing wait for 'D'
+        0 - do nothing wait for 'D' - 'B' turns off alarm
         1 - input digits m:ss, wait for A or C
         2 - paused
         3 - count down - check for 'B'
@@ -124,10 +123,16 @@ void column3_isr(){
         press_flag = 0;
         char c = get_char_keypad(row, 3);
 
-        if(state == 0 && c == 'D'){
-            state = 1;
-            new_state = 1;
-            pressed = 0;
+        if(state == 0){
+            if(c == 'D'){
+                blinky = 0;
+                state = 1;
+                new_state = 1;
+            }
+            else if(c == 'B'){
+                new_state = 1;
+                blinky = 0;
+            }
         }
         else if(state == 1 || state == 2){
             if(c == 'C' && state == 1){
@@ -136,7 +141,6 @@ void column3_isr(){
             }   
             else if(c == 'A'){
                 set_inc_by_timer(inc_by); 
-                digit_num = 0;
                 if(state == 1){
                     new_state = 1;
                 }
@@ -162,20 +166,28 @@ int main()
     LCD.begin();
     set_timer(10, 30);
 
-    /* enable ports (DEF) */
-    gpio_enable((char*)"ADEF");
+    /* enable ports (ADEF) */
+    gpio_enable((char*)"ABDEF");
 
     /* set MODER */
+    /* KeyPad output */
     gpio_moder(GPIOE, 13, GPIO_OUTPUT);     // set PE_13 for row 4
     gpio_moder(GPIOF, 15, GPIO_OUTPUT);     // set PF_15 for row 3
     gpio_moder(GPIOD, 8,  GPIO_OUTPUT);     // set PD_8  for row 2
     gpio_moder(GPIOD, 9,  GPIO_OUTPUT);     // set PD_9  for row 1
+
+    /* LEDs */
     gpio_moder(GPIOA, 5,  GPIO_OUTPUT);     // set PA_5  for blue LED
+    gpio_moder(GPIOB, 11, GPIO_OUTPUT);     // set PB_11 for sequential (0)
+    gpio_moder(GPIOB, 10, GPIO_OUTPUT);     // set PB_10 for sequential (1)
+    gpio_moder(GPIOE, 15, GPIO_OUTPUT);     // set PE_15 for sequential (2)
+    gpio_moder(GPIOE, 14, GPIO_OUTPUT);     // set PE_14 for sequential (3)
 
     while (true) {
 
         if(state == 1){
-            if (new_state){   
+            if (new_state){  
+                gpio_sequential_off();
                 LCD.clear();
                 LCD.setCursor(2, 0);
                 LCD.print("Enter a time:");
@@ -184,12 +196,10 @@ int main()
                 LCD.print("m:ss");
                 new_state = 0;
             }
-            // else if(get_key()[0] != 0 && digit_num < TIMER_MAX_LEN){
             else if(get_key()[0] != 0){
                 LCD.setCursor(TIMER_LOC, 1);
                 LCD.print(output_press_timer());
 
-                digit_num++;
                 set_key(0);
             }
             if(c_flag){
@@ -205,54 +215,72 @@ int main()
         }
         else if(state == 2){
             if (new_state){
-                LCD.clear();
-                LCD.setCursor(0, 0);
-                LCD.print("Paused:");
-
-                LCD.setCursor(TIMER_LOC, 1);
-                LCD.print(string_timer());
-
-                new_state = 0;
+                new_state = 1;
+                reset_timer();
+                inc_by = -1;
+                state = 0;
             }
+            // if (new_state){
+            //     LCD.clear();
+            //     LCD.setCursor(0, 0);
+            //     LCD.print("Paused:");
+
+            //     LCD.setCursor(TIMER_LOC, 1);
+            //     LCD.print(string_timer());
+
+            //     new_state = 0;
+            // }
         }
         else if(state == 3){
             if(new_state){
                 int_timer();
+
                 if(inc_by == 1){
                     swap_timer();
                 }
                 new_state = 0;
             }
-            if(timer_flag){            
+            if(timer_flag){  
                 LCD.clear();
-                LCD.setCursor(0, 0);
-
+                LCD.setCursor(0, 0);          
                 if(inc_by == 1){
                     LCD.print("Time Passed:");
                 }
                 else{
                     LCD.print("Time Remaining:");
                 }
+
                 LCD.setCursor(6, 1);
                 LCD.print(string_timer());
                 timer_flag = 0;
 
                 if(goal_timer()){
-                    LCD.clear();
-                    if(inc_by == 1){
-                        LCD.setCursor(2, 0);
-                        LCD.print("Time Reached");
-                    }
-                    else{
-                        LCD.setCursor(4, 0);
-                        LCD.print("Times Up");
-                    }
+                    state = 4;
+                    new_state = 1;
                     reset_timer();
                 }
             }
         }
+        else if(state == 4){
+            if(new_state){
+                LCD.clear();
+                if(inc_by == 1){
+                    LCD.setCursor(2, 0);
+                    LCD.print("Time Reached");
+                    inc_by = -1;            // set to default
+                }
+                else{
+                    LCD.setCursor(4, 0);
+                    LCD.print("Times Up");
+                }
+                new_state = 0;    
+            }
+            blinky++;
+            state = 0;
+        }
         else{
-            if(new_state){            
+            if(new_state){   
+                gpio_sequential_off();       
                 LCD.clear();
                 LCD.setCursor(2, 0);
                 LCD.print("Press 'D' to");
@@ -260,10 +288,19 @@ int main()
                 LCD.print("enter a time");
                 new_state = 0;
             }
+            if(blinky != 0){    
+                if(++blinky > TIME_DELAY){
+                    blinky = 1;
+                    LCD.setCursor(1, 1);
+                    LCD.print("New Timer: 'D'");
+                }
+                gpio_sequential(blinky);
+            }
         }
 
-        set_row_keypad(&++row);                     // (also sleeps for 10ms)
+        set_row_keypad(&++row);                     
         delay_keypad(&press_pause, &press_flag);    // activates/deactivates blue LED
+        thread_sleep_for(10);
     }
 }
 

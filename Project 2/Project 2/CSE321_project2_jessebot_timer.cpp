@@ -133,7 +133,7 @@ void set_inc_by_timer(int by){
 
 void set_press_timer(char c){
     if(timer.press_i == 0 && c == '0'){}
-    else if(timer.press_i < TIMER_MAX_LEN){
+    else if(timer.press_i < TIMER_SET_LEN){
         timer.press[timer.press_i++] = c;
     }
     printf("%s\n", timer.press);

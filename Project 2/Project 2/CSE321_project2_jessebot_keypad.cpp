@@ -15,35 +15,33 @@ void set_row_keypad(char *row){
     // pin 6 - PF_15 -> row 3
     // pin 7 - PD_8  -> row 2
     // pin 8 - PD_9  -> row 1
+    if(*row == KEYPAD_ROWS){
+        *row = 0;
+    }
 
     if(*row == 0){
         gpio_off(GPIOE, 13);
         gpio_off(GPIOF, 15);
         gpio_off(GPIOD, 8);
         gpio_on(GPIOD, 9);
-        thread_sleep_for(10);
     }
     else if(*row == 1){
         gpio_off(GPIOE, 13);
         gpio_off(GPIOF, 15);
         gpio_on(GPIOD, 8);
         gpio_off(GPIOD, 9);
-        thread_sleep_for(10);
     }
     else if(*row == 2){
         gpio_off(GPIOE, 13);
         gpio_on(GPIOF, 15);
         gpio_off(GPIOD, 8);
         gpio_off(GPIOD, 9);
-        thread_sleep_for(10);
     }
     else {
         gpio_on(GPIOE, 13);
         gpio_off(GPIOF, 15);
         gpio_off(GPIOD, 8);
         gpio_off(GPIOD, 9);
-        thread_sleep_for(10);
-        *row=-1;
     }
 }
 
