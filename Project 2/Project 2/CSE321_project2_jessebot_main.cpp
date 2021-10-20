@@ -36,6 +36,12 @@
  *              LCD displays "Time Remaining: m:ss"
  *              When timer hits 0 LCD displays "Times Up", LEDs turn on
  *              Must run forever
+ * 
+ * External Files:
+ *              CSE321_project2_jessebot_timer.h
+ *              CSE321_project2_jessebot_keypad.h
+ *              CSE321_project2_jessebot_gpio.h
+ *              CSE321_project2_jessebot_lib.h
  *              
  * Subroutines: main()    
  *              timer_isr()

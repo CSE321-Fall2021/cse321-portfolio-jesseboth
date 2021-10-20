@@ -33,10 +33,19 @@ char keys[4][4] = { {'1', '2', '3', 'A'},
                     {'7', '8', '9', 'C'},
                     {'*', '0', '#', 'D'} };
 char key[2];
+
+/* returns the key based on the input 
+input:
+        row - row on keypad
+        col - col on keypad
+output:
+        character pressed
+*/
 char get_char_keypad(char row, char col){
     printf("%c\n", keys[row][col]);
     return keys[row][col];    
 }
+
 /* turn on the specific row based on input
 input:
         row - current row
