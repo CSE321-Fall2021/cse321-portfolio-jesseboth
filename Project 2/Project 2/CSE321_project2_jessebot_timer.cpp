@@ -3,17 +3,32 @@
  * 
  * Assignment:  Project 2 Timer System
  * 
- * Purpose:     Library to deal with timer
- *              manipulation.
+ * Purpose:     Library to deal with timer manipulation.
  * 
- * Global Vars: timer (struct)
+ * Constraints: 
+ *              see main
  * 
  * Subroutines: 
- *              void set_timer(int m, int s);
- *              struct timer get_timer();
- *              void inc_timer(int by);
- *              int goal_timer(int m, int s);
- *              char *string_timer();
+ *              void set_timer(int m, int s)
+ *              struct timer get_timer()
+ *              void inc_timer(int by)
+ *              int goal_timer(int m, int s)
+ *              char *string_timer()
+ *              void int_timer()
+ *              void set_inc_by_time
+ * 
+ * 
+ * Global Vars: 
+ *              timer (struct)
+ *                  * minutes - current minutes
+ *                  * seconds - current seconds
+ *                  * inc_by - increment or decrement or zero
+ *                  * str[TIMER_SET_LEN+2] - output string m:ss
+ *                  * min_goal - goal 0 or set minutes 'C' dependent
+ *                  * sec_goal - goal 0 or set seconds 'C' dependent
+ *                  * press[TIMER_SET_LEN+1] - storage string for input
+ *                  * press_i - press index
+ *              
  * 
  * Sources: 
  *        
@@ -25,11 +40,11 @@
 struct timer{
     int minutes;
     int seconds;
-    int inc_by = 0;     // default 0
-    char str[6];        // mm:ss
-    char min_goal = 0;  // default 0
-    char sec_goal = 0;  // default 0 
-    char press[6];      // mss
+    int inc_by = 0;             // default 0
+    char str[TIMER_SET_LEN+2];  // m:ss
+    char min_goal = 0;          // default 0
+    char sec_goal = 0;          // default 0 
+    char press[TIMER_SET_LEN+1];// mss
     char press_i = 0;
 } timer;
 
@@ -45,7 +60,7 @@ void set_timer(int m, int s){
     timer.seconds = s;
 }
 
-/* returns struct */
+/* returns timer struct */
 struct timer get_timer(){
     return timer;
 }
@@ -107,6 +122,7 @@ char *string_timer(){
     return timer.str;
 }
 
+/* convert timer string to ints */
 void int_timer(){
     if(string_length(timer.press) < TIMER_MAX_LEN){
         timer.minutes = string_to_int_wlen(timer.str, 1);
@@ -121,6 +137,11 @@ void int_timer(){
         timer.minutes++;
         timer.seconds-=60;
     }
+
+    if(timer.minutes >= TIMER_MAX_MIN){
+        timer.minutes = TIMER_MAX_MIN-1;
+        timer.seconds = 59;
+    }
 }
 
 /* sets the value for incrementation 
@@ -131,6 +152,11 @@ void set_inc_by_timer(int by){
     timer.inc_by = by;
 }
 
+/* set the 'press_timer' string at the current
+    index with the input.
+input:
+        c - char (0-9)
+*/
 void set_press_timer(char c){
     if(timer.press_i == 0 && c == '0'){}
     else if(timer.press_i < TIMER_SET_LEN){
@@ -139,12 +165,14 @@ void set_press_timer(char c){
     printf("%s\n", timer.press);
 }
 
+/* set the press string to null */
 void reset_press_timer(){
     while(timer.press_i > 0){
         timer.press[timer.press_i--] = 0;
     }
 }
 
+/* get the timer in the correct format m:ss */
 char *output_press_timer(){
     // mm:ss
     int i, cur, end, colon;  
@@ -181,6 +209,7 @@ char *output_press_timer(){
     return timer.str;
 }
 
+/* swap the goal and the current time*/
 void swap_timer(){
     int temp_m, temp_s;
     temp_m = timer.min_goal;
@@ -191,6 +220,7 @@ void swap_timer(){
     timer.seconds = temp_s;
 }
 
+/* reset timer values */
 void reset_timer(){
     reset_press_timer();
     timer.minutes = 0;

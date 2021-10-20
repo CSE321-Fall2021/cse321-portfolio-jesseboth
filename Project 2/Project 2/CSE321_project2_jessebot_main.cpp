@@ -4,28 +4,32 @@
  * 
  * Assignment: Project 2 Timer System
  * 
- * Purpose:   Count down alarm system utilizing
- *            bare metal methodology.
+ * Purpose:   Alarm system utilizing bare metal methodology.
  * 
- * Inputs:  4x4 keypad
- *              * A - start timer
- *              * B - stop timer
- *              * C - reverse count
- *              * D - trigger input time
- *              * 0 - 9 - Digits for time
+ * Inputs:      4x4 keypad
+ *                  * A - start timer
+ *                  * B - pause timer/reset timer
+ *                  * C - reverse count
+ *                  * D - trigger input time
+ *                  * 0 - 9 - Digits for time
  * 
- * Outputs: LED
- *              * -
- *          LCD (model 1802)
- *              * "Time Remaining: m:ss"
- *              * "Times Up"
- *              * Prompt to enter time
+ * Outputs:     LED
+ *              Blue LED 
+ *                  * Key press
+ *              Sequential LEDs
+ *                  * 2 yellow/2 red
+ *                  * Lights up with alarm
+ *              LCD (model 1802)
+ *                  * "Time Remaining: m:ss"
+ *                  * "Times Up"
+ *                  * Prompt to enter time
  * 
  * Constraints: 
  *              Bare-Metal
  *              Time entered format: m:ss (max time 9:59)
  *              A - start timer
  *              B - stop/turn off
+ *              C - set to increment/decrement
  *              D - trigger input time
  *              User is prompted to enter time
  *              When a value is pressed an led lights up
@@ -33,7 +37,33 @@
  *              When timer hits 0 LCD displays "Times Up", LEDs turn on
  *              Must run forever
  *              
- * Subroutines: Main
+ * Subroutines: main()    
+ *              timer_isr()
+ *              column0_isr()
+ *              column1_isr()
+ *              column2_isr()
+ *              column3_isr()
+ * 
+ * Globals:
+ *              CSE321_LCD LCD(LCD_COLS, LCD_ROWS, LCD_5x8DOTS, PB_9, PB_8)
+ *              InterruptIn Column0(PF_14)
+ *              InterruptIn Column1(PE_11)
+ *              InterruptIn Column2(PE_9)
+ *              InterruptIn Column3(PF_13)
+ *              timer_flag - flag to update LCD 
+ *              press_flag - flag to allow a press
+ *              press_pause - int to delapy input
+ *              row - current active row 
+ *              new_state - flag that indicate state change
+ *              inc_by - increment or decrement
+ *              blinky - used for alarm LEDs
+ *              c_flag - set when 'C' is pressed
+ *              state - current state
+ *                  * 0 - do nothing wait for 'D' - 'B' turns off alarm
+ *                  * 1 - input digits m:ss, wait for A or C
+ *                  * 2 - paused 'A' starts timer, 'B' resets
+ *                  * 3 - count down - check for 'B'
+ *                  * 4 - make LEDs blink;
  * 
  * Sources: RMO432
  *          Ticker (https://os.mbed.com/docs/mbed-os/v6.15/apis/ticker.html)
@@ -57,15 +87,15 @@ InterruptIn Column1(PE_11);
 InterruptIn Column2(PE_9);
 InterruptIn Column3(PF_13);
 
-char timer_flag;
+char timer_flag;        // timer flag to set LCD
 char press_flag = 0;    // allows key press to function when set
 char press_pause = 0;   // delays keypress
 char row = 0;           // row selection set
-char new_state = 1;
-int inc_by = -1;       // default to decrease
-int blinky = 0;
-char c_flag = 0;
-char state = 0;
+char new_state = 1;     // Used when a new state is triggered
+int inc_by = -1;        // default to decrease
+int blinky = 0;         // value to light up sequential LEDs
+char c_flag = 0;        // flag for C pressed
+char state = 0;         // current state
 /*   state:
         0 - do nothing wait for 'D' - 'B' turns off alarm
         1 - input digits m:ss, wait for A or C
@@ -73,7 +103,7 @@ char state = 0;
         3 - count down - check for 'B'
         4 - make LEDs blink;
 */
-
+/* isr to set the timer or turn timer off */
 void timer_isr(){
     timer_flag = 1;
     inc_timer();
@@ -81,6 +111,7 @@ void timer_isr(){
         set_inc_by_timer(0);
     }
 }
+/* isr for column 0 (147*) */
 void column0_isr(){
     if(press_flag){
         press_pause = PAUSE_FOR;
@@ -93,6 +124,7 @@ void column0_isr(){
         }
     }
 }
+/* isr for column 1 (2580) */
 void column1_isr(){
     if(press_flag){
         press_pause = PAUSE_FOR;
@@ -105,6 +137,7 @@ void column1_isr(){
         }
     }
 }
+/* isr for column 2 (369#) */
 void column2_isr(){
     if(press_flag){
         press_pause = PAUSE_FOR;
@@ -117,6 +150,7 @@ void column2_isr(){
         }
     }
 }
+/* isr for column 2 (ABCD) */
 void column3_isr(){
     if(press_flag){
         press_pause = PAUSE_FOR;
@@ -250,7 +284,7 @@ int main()
                     LCD.print("Time Remaining:");
                 }
 
-                LCD.setCursor(6, 1);
+                LCD.setCursor(TIMER_LOC, 1);
                 LCD.print(string_timer());
                 timer_flag = 0;
 

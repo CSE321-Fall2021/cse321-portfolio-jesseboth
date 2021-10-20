@@ -3,6 +3,7 @@
 
 #define TIMER_MAX_LEN 4  // code is capable of mm:ss
 #define TIMER_SET_LEN 3  // set 3 for m:ss or 4 for mm:ss
+#define TIMER_MAX_MIN 10 // value to truncate down to 9:59
 #define TIMER_LOC 6
 #define TIME_DELAY 500   // 5 seconds before prompt
 struct timer;

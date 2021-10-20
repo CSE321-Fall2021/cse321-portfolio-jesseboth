@@ -1,3 +1,31 @@
+/**
+ * Author: Jesse Both
+ * 
+ * Assignment:  Project 2 Timer System
+ * 
+ * Purpose:     Library to deal with timer manipulation.
+ * 
+ * Constraints: 
+ *              see main
+ * 
+ * Global Vars:
+ *              keys - 4x4 array
+ *              key  - single char
+ * 
+ * Subroutines: 
+ *              void set_timer(int m, int s)
+ *              struct timer get_timer()
+ *              void inc_timer(int by)
+ *              int goal_timer(int m, int s)
+ *              char *string_timer()
+ *              void int_timer()
+ *              void set_inc_by_time
+ *              
+ * 
+ * Sources: 
+ *        
+ * 
+*/
 #include "CSE321_project2_jessebot_keypad.h"
 
 char keys[4][4] = { {'1', '2', '3', 'A'},
@@ -9,7 +37,10 @@ char get_char_keypad(char row, char col){
     printf("%c\n", keys[row][col]);
     return keys[row][col];    
 }
-
+/* turn on the specific row based on input
+input:
+        row - current row
+*/
 void set_row_keypad(char *row){
     // pin 5 - PE_13 -> row 4
     // pin 6 - PF_15 -> row 3
@@ -45,6 +76,11 @@ void set_row_keypad(char *row){
     }
 }
 
+/* delay keypad until pause is 0 - sets the flag
+input:
+        pause - int that decrements
+        flag - allows button to be pressed when sets
+*/
 void delay_keypad(char *pause, char *flag){
     if(*pause>0){
         gpio_on(GPIOA, 5);
@@ -56,10 +92,18 @@ void delay_keypad(char *pause, char *flag){
     }
 }
 
+/* sets the key pressed
+input: 
+        c - valid key on board
+*/
 void set_key(char c){
     key[0] = c;
 }
 
+/* get the key that was pressed 
+output:
+        key - key stored in key
+*/
 char *get_key(){
     return key;
 }
