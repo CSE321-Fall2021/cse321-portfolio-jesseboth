@@ -1,6 +1,7 @@
 -------------------
 About
 -------------------
+
 Project Description: 
 * Bare-Metal alarm system. Allows for user input via a keypad and displays the 
 time via an LCD. The user will input a time under 10 minutes with the keypad and 
@@ -13,8 +14,9 @@ Contribitor List: Jesse Both
 --------------------
 Features
 --------------------
+
 * LCD
-    * Displays time remaining.
+    * Displays Prompts and time remaining.
 
 * 4x4 Keypad
     * Allows for inputs in the system.
@@ -55,7 +57,7 @@ Getting Started
 --------------------
 CSE321_project2_jessebot_main.cpp:
 --------------------
- 
+ This is the main file of the program.  This is where the interrupt handlers are located.  The main function handles what state the program is currently in and what to do with each state.
 
 ----------
 Things Declared
@@ -67,12 +69,20 @@ Things Declared
 * InterruptIn Column1(PE_11)
 * InterruptIn Column2(PE_9)
 * InterruptIn Column3(PF_13)
-
-* char timer_flag    
-    - Used to indicate when to modify the timer. 
-This is set in the interrupt handler for the Ticker.
-* char row 
-    - Used to indicate which row is currently active to determine which button was pressed.
+* timer_flag - flag to update LCD 
+* press_flag - flag to allow a press
+* press_pause - int to delapy input
+* row - current active row 
+* new_state - flag that indicate state change
+* inc_by - increment or decrement
+* blinky - used for alarm LEDs
+* c_flag - set when 'C' is pressed
+* state - current state
+    * 0 - do nothing wait for 'D' - 'B' turns off alarm
+    * 1 - input digits m:ss, wait for A or C
+    * 2 - paused 'A' starts timer, 'B' resets
+    * 3 - count down - check for 'B'
+    * 4 - make LEDs blink;
 
 ----------
 API and Built In Elements Used
@@ -103,35 +113,119 @@ Custom Functions
 --------------------
 CSE321_project2_jessebot_timer.cpp:
 --------------------
- 
+ This file handles all the timer aspects of the program.
 
 ----------
 Things Declared
 ----------
-* struct timer{  
-&nbsp;      int minutes;  
-&nbsp;      int seconds;  
-&nbsp;      char str[6]; // mm:ss  
-} timer;  
+struct timer{
+&nbsp;    int minutes
+&nbsp;    int seconds
+&nbsp;    int inc_by = 0
+&nbsp;    char str[TIMER_SET_LEN+2]
+&nbsp;    char min_goal = 0   
+&nbsp;    char sec_goal = 0           
+&nbsp;    char press[TIMER_SET_LEN+1]
+&nbsp;    char press_i = 0
+} timer
 
 ----------
 Custom Functions
 ----------
- * void set_timer(int m, int s)
+ * set_timer(int m, int s)
     * Sets the timer struct based on the inputs.
- * struct timer get_timer()
+ * timer get_timer()
     * Returns the timer struct.
- * void inc_timer(int by)
+ * inc_timer(int by)
     * Increments the timer based on the input.  This is so the timer can be incremented or decremented.
- * int goal_timer(int m, int s)
+ * goal_timer(int m, int s)
     * This is the time that the timer needs to reach. This will be 0 if decrementing time or the time the user set if incrementing.
- * char *string_timer()
+ * string_timer()
     * Returns the timer value if the format m:ss.  This also sets the str value in the timer struct.
+ * int_timer()
+    * This function takes the press string from the struct and processes it to convert into 2 integers of mininutes and seconds.
+ * set_inc_by_timer(int by)
+    *This sets the value for incrementation inside the struct.
+ * set_press_timer(char c)
+    * Sets the next index as c in the press timer utilizing press_i.
+ * reset_press_timer()
+    * This sets the press timer to null characters.
+ * output_press_timer() 
+    * Converts the press string into the proper format to be diplayed on the LCD.
+ * swap_timer()
+    * Swaps the current time and the goal time.  This is done when 'C' is press approprietly. 
+ * reset_timer()
+    * Resets the timer struct to all the default values.
 
  <br/>
  
 --------------------
 CSE321_project2_jessebot_keypad.cpp:
 --------------------
-- Currently does nothing.
+
+This file handles most of the keypad functionality.  Once an interrupt is triggered
+this file is used to make sense of what key was pressed.
+
+----------
+Things Declared
+----------
+
+keys[4][4] =   { {'1', '2', '3', 'A'}, <br/>
+                {'4', '5', '6', 'B'}, <br/>
+                {'7', '8', '9', 'C'}, <br/>
+                {'*', '0', '#', 'D'} }; <br/> Array to determin which key was pressed 
+
+key[2] - Used to store what key was recently pressed.
+
+----------
+Custom Functions
+----------
+
+* get_char_keypad(char row, char col)
+    * Returns the char that was pressed based on the input and using the keys array.
+
+* set_row_keypad(char * row)
+    * Sets which pin is currently active for the keypad.
+
+* delay_keypad(char *pause, char *flag)
+    * Delays the keypad from being pressed without sleeping.
+
+* set_key(char c)
+    * This function sets the key that was just pressed into key.
+
+* get_key()
+    * This function returns that value stored in key.
+
+ <br/>
+
+--------------------
+CSE321_project2_jessebot_gpio.cpp:
+--------------------
+This file controls gpio manipulation.
+
+
+----------
+Things Declared
+----------
+
+----------
+Custom Functions
+----------
+
+TODO
+
+ <br/>
+
+--------------------
+CSE321_project2_jessebot_gpio.cpp:
+--------------------
+
+----------
+Things Declared
+----------
+
+----------
+Custom Functions
+----------
+
 TODO
