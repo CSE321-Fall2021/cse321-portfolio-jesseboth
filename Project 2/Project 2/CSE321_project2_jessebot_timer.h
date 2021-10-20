@@ -1,3 +1,39 @@
+/**
+ * Author: Jesse Both
+ * 
+ * Assignment:  Project 2 Timer System
+ * 
+ * Purpose:     Library to deal with timer manipulation.
+ * 
+ * Constraints: 
+ *              see main
+ * 
+ * Subroutines: 
+ *              void set_timer(int m, int s)
+ *              struct timer get_timer()
+ *              void inc_timer(int by)
+ *              int goal_timer(int m, int s)
+ *              char *string_timer()
+ *              void int_timer()
+ *              void set_inc_by_time
+ * 
+ * 
+ * Global Vars: 
+ *              timer (struct)
+ *                  * minutes - current minutes
+ *                  * seconds - current seconds
+ *                  * inc_by - increment or decrement or zero
+ *                  * str[TIMER_SET_LEN+2] - output string m:ss
+ *                  * min_goal - goal 0 or set minutes 'C' dependent
+ *                  * sec_goal - goal 0 or set seconds 'C' dependent
+ *                  * press[TIMER_SET_LEN+1] - storage string for input
+ *                  * press_i - press index
+ *              
+ * 
+ * Sources: 
+ *        
+ * 
+*/
 #include "mbed.h"
 #include "CSE321_project2_jessebot_lib.h"
 
