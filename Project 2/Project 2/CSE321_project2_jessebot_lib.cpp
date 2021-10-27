@@ -52,7 +52,7 @@ int string_to_int(char *str){
     return ret;
 }
 
-/* string to int with known lenght
+/* string to int with known length
 input:
         str
         length - string length

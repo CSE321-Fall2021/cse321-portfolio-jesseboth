@@ -175,16 +175,20 @@ void column3_isr(){
             }
         }
         else if(state == 1 || state == 2){
+
+            /* check if 'C' was pressed */
             if(c == 'C' && state == 1){
                 c_flag = 1;
                 inc_by *= -1;
             }  
+            /* check if 'B' was pressed */
             if(c == 'B' && state == 2){
                 new_state = 1;
                 reset_timer();
                 inc_by = -1;
                 state = 0;
             }
+            /* check if 'A' was pressed */
             else if(c == 'A'){
                 set_inc_by_timer(inc_by); 
                 if(state == 1){
@@ -193,6 +197,7 @@ void column3_isr(){
                 state = 3;
             }
         }
+        /* check if 'B' was pressed */
         else if(state == 3 && c == 'B'){
             set_inc_by_timer(0);
             state = 2;
@@ -231,7 +236,9 @@ int main()
 
     while (true) {
 
+        /* Input State */
         if(state == 1){
+            /* initialize enter time state*/
             if (new_state){  
                 gpio_sequential_off();
                 LCD.clear();
@@ -242,44 +249,51 @@ int main()
                 LCD.print("m:ss");
                 new_state = 0;
             }
+            /* check what key was pressed */
             else if(get_key()[0] != 0){
                 LCD.setCursor(TIMER_LOC, 1);
                 LCD.print(output_press_timer());
 
                 set_key(0);
             }
+            /* indicate which direction the timer is counting*/
             if(c_flag){
                 LCD.setCursor(15, 1);
                 if(inc_by == 1){
-                    LCD.print("^");
+                    LCD.print("^");     // up
                 }
                 else{
-                    LCD.print("v");
+                    LCD.print("v");     // down
                 }
                 c_flag = 0;
             }
         }
+        /* Pause State */
         else if(state == 2){
+            /* intialize paused state */
             if (new_state){
                 LCD.clear();
                 LCD.setCursor(0, 0);
                 LCD.print("Paused:");
 
                 LCD.setCursor(TIMER_LOC, 1);
-                LCD.print(string_timer());
+                LCD.print(string_timer());      // output time
 
                 new_state = 0;
             }
         }
+        /* Count State */
         else if(state == 3){
+            /* intialize counting state */
             if(new_state){
                 int_timer();
 
                 if(inc_by == 1){
-                    swap_timer();
+                    swap_timer();               // swap goal and current timer
                 }
                 new_state = 0;
             }
+            /* Do operation every second */
             if(timer_flag){  
                 LCD.clear();
                 LCD.setCursor(0, 0);          
@@ -294,6 +308,7 @@ int main()
                 LCD.print(string_timer());
                 timer_flag = 0;
 
+                /* go to next state if at goal */
                 if(goal_timer()){
                     state = 4;
                     new_state = 1;
@@ -301,13 +316,15 @@ int main()
                 }
             }
         }
+        /* Times Up */
         else if(state == 4){
+            /* intialize state for done */
             if(new_state){
                 LCD.clear();
                 if(inc_by == 1){
                     LCD.setCursor(2, 0);
                     LCD.print("Time Reached");
-                    inc_by = -1;            // set to default
+                    inc_by = -1;                // set to default
                 }
                 else{
                     LCD.setCursor(4, 0);
@@ -318,7 +335,9 @@ int main()
             blinky++;
             state = 0;
         }
+        /* Default State */
         else{
+            /* initialize defualt state */
             if(new_state){   
                 gpio_sequential_off();       
                 LCD.clear();
@@ -328,6 +347,8 @@ int main()
                 LCD.print("enter a time");
                 new_state = 0;
             }
+
+            /* make LEDs Blink */
             if(blinky != 0){    
                 if(++blinky > TIME_DELAY){
                     blinky = 1;
@@ -338,9 +359,9 @@ int main()
             }
         }
 
-        set_row_keypad(&++row);                     
+        set_row_keypad(&++row);                     // set next row                     
         delay_keypad(&press_pause, &press_flag);    // activates/deactivates blue LED
-        thread_sleep_for(10);
+        thread_sleep_for(10);    
     }
 }
 

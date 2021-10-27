@@ -1,3 +1,31 @@
+/**
+ * Author: Jesse Both
+ * 
+ * Assignment:  Project 2 Timer System
+ * 
+ * Purpose:     Library to deal with timer manipulation.
+ * 
+ * Constraints: 
+ *              see main
+ * 
+ * Global Vars:
+ *              keys - 4x4 array
+ *              key  - single char
+ * 
+ * Subroutines: 
+ *              void set_timer(int m, int s)
+ *              struct timer get_timer()
+ *              void inc_timer(int by)
+ *              int goal_timer(int m, int s)
+ *              char *string_timer()
+ *              void int_timer()
+ *              void set_inc_by_time
+ *              
+ * 
+ * Sources: 
+ *        
+ * 
+*/
 #include "mbed.h"
 #include "CSE321_project2_jessebot_gpio.h"
 

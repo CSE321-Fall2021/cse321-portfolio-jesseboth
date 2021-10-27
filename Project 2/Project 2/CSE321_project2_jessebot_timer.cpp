@@ -98,9 +98,9 @@ output:
         string mm:ss
 */
 char *string_timer(){
-    int x = 0; // index
+    int x = 0;      // index
     if(timer.minutes < 10){
-        timer.str[x++] = timer.minutes + '0';
+        timer.str[x++] = timer.minutes + '0';       // string to int
     }
     else{
         // get 10's place by itself and convert to a char
@@ -110,13 +110,13 @@ char *string_timer(){
 
     timer.str[x++] = ':'; //place ':'
     if(timer.seconds < 10){
-        timer.str[x++] = '0';
-        timer.str[x++] = timer.seconds + '0';
+        timer.str[x++] = '0';                       // place 0
+        timer.str[x++] = timer.seconds + '0';       // string to int
     }
     else{
         // get 10's place by itself and convert to a char
         timer.str[x++] = ((timer.seconds - (timer.seconds % 10)) / 10) + '0';
-        timer.str[x++] = (timer.seconds % 10) + '0';
+        timer.str[x++] = (timer.seconds % 10) + '0'; // ones digit
     }
     timer.str[x] = 0;   // null terminate
     return timer.str;
@@ -133,11 +133,13 @@ void int_timer(){
         timer.seconds = string_to_int_wlen(timer.str+3, 2);
     }
     
+    /* make time a 'valid' time */
     if(timer.seconds > 59){
         timer.minutes++;
         timer.seconds-=60;
     }
 
+    /* make time within range of valid time */
     if(timer.minutes >= TIMER_MAX_MIN){
         timer.minutes = TIMER_MAX_MIN-1;
         timer.seconds = 59;
@@ -158,9 +160,9 @@ input:
         c - char (0-9)
 */
 void set_press_timer(char c){
-    if(timer.press_i == 0 && c == '0'){}
+    if(timer.press_i == 0 && c == '0'){}        // ignore leading 0's
     else if(timer.press_i < TIMER_SET_LEN){
-        timer.press[timer.press_i++] = c;
+        timer.press[timer.press_i++] = c;       // place in placeholder string
     }
     printf("%s\n", timer.press);
 }
@@ -168,7 +170,7 @@ void set_press_timer(char c){
 /* set the press string to null */
 void reset_press_timer(){
     while(timer.press_i > 0){
-        timer.press[timer.press_i--] = 0;
+        timer.press[timer.press_i--] = 0;       // make placeholder string null
     }
 }
 
@@ -177,7 +179,7 @@ char *output_press_timer(){
     // mm:ss
     int i, cur, end, colon;  
     if(timer.press_i < TIMER_MAX_LEN){
-        i = 0;
+        i = 0;                        
         cur = 3;
         end = timer.press_i-1;
         colon = 1;
@@ -190,18 +192,20 @@ char *output_press_timer(){
         colon = 2;
     }
     else{
-        return (char *)0;
+        return (char *)0;       // null
     }
 
     while(i<timer.press_i){
-        timer.str[cur--] = timer.press[end--];
-        i++;
+        timer.str[cur--] = timer.press[end--];      // place digit
+        i++;                                    
+        /* check if colon is appropriate */
         if(cur == colon){
             timer.str[cur--] = ':';
         }
     }
     while(cur >= 0){
-        timer.str[cur--] = '0';
+        timer.str[cur--] = '0';                     // place 0's
+        /* check if colon is approriate */
         if(cur == colon){
             timer.str[cur--] = ':';
         }

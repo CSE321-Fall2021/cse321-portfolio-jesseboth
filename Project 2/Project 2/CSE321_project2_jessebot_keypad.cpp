@@ -43,7 +43,7 @@ output:
 */
 char get_char_keypad(char row, char col){
     printf("%c\n", keys[row][col]);
-    return keys[row][col];    
+    return keys[row][col];                  // return corresponding character
 }
 
 /* turn on the specific row based on input
@@ -92,12 +92,12 @@ input:
 */
 void delay_keypad(char *pause, char *flag){
     if(*pause>0){
-        gpio_on(GPIOA, 5);
+        gpio_on(GPIOA, 5);      // activate indicator LED
         (*pause)--;
     }
     else{
         *flag = 1;
-        gpio_off(GPIOA, 5);
+        gpio_off(GPIOA, 5);     // deactivate indicator LED
     }
 }
 
