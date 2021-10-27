@@ -118,16 +118,24 @@ CSE321_project2_jessebot_timer.cpp:
 ----------
 Things Declared
 ----------
-struct timer{
-&nbsp;    int minutes
-&nbsp;    int seconds
-&nbsp;    int inc_by = 0
-&nbsp;    char str[TIMER_SET_LEN+2]
-&nbsp;    char min_goal = 0   
-&nbsp;    char sec_goal = 0           
-&nbsp;    char press[TIMER_SET_LEN+1]
-&nbsp;    char press_i = 0
-} timer
+> struct timer{
+>>   int minutes
+
+>>   int seconds
+
+>>   int inc_by = 0
+
+>>   char str[TIMER_SET_LEN+2]
+
+>>   char min_goal = 0   
+
+>>   char sec_goal = 0           
+
+>>   char press[TIMER_SET_LEN+1]
+
+>>   char press_i = 0
+
+> } timer
 
 ----------
 Custom Functions
@@ -170,12 +178,15 @@ this file is used to make sense of what key was pressed.
 Things Declared
 ----------
 
-keys[4][4] =   { {'1', '2', '3', 'A'}, <br/>
-                {'4', '5', '6', 'B'}, <br/>
-                {'7', '8', '9', 'C'}, <br/>
-                {'*', '0', '#', 'D'} }; <br/> Array to determin which key was pressed 
+> keys[4][4] =   { {'1', '2', '3', 'A'},
+>                {'4', '5', '6', 'B'}, 
+>                {'7', '8', '9', 'C'}, 
+>               {'*', '0', '#', 'D'} };
 
-key[2] - Used to store what key was recently pressed.
+* Array to determin which key was pressed 
+
+> key[2] 
+* Used to store what key was recently pressed.
 
 ----------
 Custom Functions
@@ -208,24 +219,46 @@ This file controls gpio manipulation.
 Things Declared
 ----------
 
+* #define GPIO_INPUT      0x0
+* #define GPIO_OUTPUT     0x1
+* #define GPIO_ALTERNATE  0x2
+* #define GPIO_ANALOG     0x3
+
 ----------
 Custom Functions
 ----------
 
-TODO
+* gpio_on(GPIO_TypeDef *GPIO, int pin)
+    * Turns gpio pin on based on the input. Manipulates ODR.
+* gpio_off(GPIO_TypeDef *GPIO, int pin)
+    * Turns gpio pin off based on the input. Manipulates ODR.
+* gpio_enable(char *ports)
+    * Enables ports based on string input.  'AB' enables ports A and B.
+* gpio_moder(GPIO_TypeDef *GPIO, char pin, char set)
+    * Enables MODER based on the input.
+* gpio_sequential(int blink)
+    * Makes LEDs blink Sequentailly.
+* gpio_sequential_off()
+    * Turns sequential LEDs off.
 
  <br/>
 
 --------------------
-CSE321_project2_jessebot_gpio.cpp:
+CSE321_project2_jessebot_lib.cpp:
 --------------------
 
 ----------
 Things Declared
 ----------
 
+N/A
+
 ----------
 Custom Functions
 ----------
-
-TODO
+* string_to_int(char *str)
+    * Converts a string to an integer.
+* string_length(char *str)
+    * Gets the string length.
+* string_to_int_wlen(char *str, int len)
+    * Converts a string to an integer with a known length.
