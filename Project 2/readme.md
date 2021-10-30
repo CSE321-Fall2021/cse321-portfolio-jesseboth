@@ -64,6 +64,7 @@ CSE321_project2_jessebot_main.cpp:
 Things Declared
 ----------
 
+
 * Ticker TIME
 * CSE321_LCD LCD(LCD_COLS, LCD_ROWS, LCD_5x8DOTS, PB_9, PB_8)
 * InterruptIn Column0(PF_14)
@@ -88,10 +89,9 @@ Things Declared
 ----------
 API and Built In Elements Used
 ----------
-mbed.h
-
-* Ticker
-* InterruptIn
+* mbed.h
+    * Ticker
+    * InterruptIn
 
 ----------
 Custom Functions
@@ -133,6 +133,11 @@ struct timer{
 } timer
 </pre>
 * This struct contains all timer relavent variables.
+
+----------
+API and Built In Elements Used
+----------
+* mbed.h
 
 ----------
 Custom Functions
@@ -185,9 +190,14 @@ keys[4][4] = { {'1', '2', '3', 'A'},
 * Array to determin which key was pressed 
 
 <pre>
-key[2]
+key[2];
 </pre>
 * Used to store what key was recently pressed.
+
+----------
+API and Built In Elements Used
+----------
+* mbed.h
 
 ----------
 Custom Functions
@@ -220,10 +230,17 @@ This file controls gpio manipulation.
 Things Declared
 ----------
 
-* #define GPIO_INPUT      0x0
-* #define GPIO_OUTPUT     0x1
-* #define GPIO_ALTERNATE  0x2
-* #define GPIO_ANALOG     0x3
+<pre>
+#define GPIO_INPUT      0x0
+#define GPIO_OUTPUT     0x1
+#define GPIO_ALTERNATE  0x2
+#define GPIO_ANALOG     0x3
+</pre>
+
+----------
+API and Built In Elements Used
+----------
+* mbed.h
 
 ----------
 Custom Functions
@@ -253,6 +270,11 @@ Things Declared
 ----------
 
 N/A
+
+----------
+API and Built In Elements Used
+----------
+* mbed.h
 
 ----------
 Custom Functions
