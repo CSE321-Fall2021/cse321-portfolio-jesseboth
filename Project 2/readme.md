@@ -45,7 +45,8 @@ Resources and References
 --------------------
 Getting Started
 --------------------
-1. Build the Circuit (place schematic here)
+1. Build the Circuit
+<img src="Project 2/CSE321_project2_schematic.svg">
 2. Build a new project in Mbed Studio
 3. Select the Nucleo L4R5ZI as the target
 4. Move files into Program
@@ -118,28 +119,25 @@ CSE321_project2_jessebot_timer.cpp:
 ----------
 Things Declared
 ----------
-> struct timer{
->>   int minutes
 
->>   int seconds
-
->>   int inc_by = 0
-
->>   char str[TIMER_SET_LEN+2]
-
->>   char min_goal = 0   
-
->>   char sec_goal = 0           
-
->>   char press[TIMER_SET_LEN+1]
-
->>   char press_i = 0
-
-> } timer
+<pre>
+struct timer{
+    int minutes
+    int seconds
+    int inc_by = 0
+    char str[TIMER_SET_LEN+2]
+    char min_goal = 0   
+    char sec_goal = 0           
+    char press[TIMER_SET_LEN+1]
+    char press_i = 0
+} timer
+</pre>
+* This struct contains all timer relavent variables.
 
 ----------
 Custom Functions
 ----------
+
  * set_timer(int m, int s)
     * Sets the timer struct based on the inputs.
  * timer get_timer()
@@ -153,7 +151,7 @@ Custom Functions
  * int_timer()
     * This function takes the press string from the struct and processes it to convert into 2 integers of mininutes and seconds.
  * set_inc_by_timer(int by)
-    *This sets the value for incrementation inside the struct.
+    * This sets the value for incrementation inside the struct.
  * set_press_timer(char c)
     * Sets the next index as c in the press timer utilizing press_i.
  * reset_press_timer()
@@ -178,14 +176,17 @@ this file is used to make sense of what key was pressed.
 Things Declared
 ----------
 
-> keys[4][4] =   { {'1', '2', '3', 'A'},
->                {'4', '5', '6', 'B'}, 
->                {'7', '8', '9', 'C'}, 
->               {'*', '0', '#', 'D'} };
-
+<pre>
+keys[4][4] = { {'1', '2', '3', 'A'},
+               {'4', '5', '6', 'B'}, 
+               {'7', '8', '9', 'C'}, 
+               {'*', '0', '#', 'D'} };
+</pre>
 * Array to determin which key was pressed 
 
-> key[2] 
+<pre>
+key[2]
+</pre>
 * Used to store what key was recently pressed.
 
 ----------
