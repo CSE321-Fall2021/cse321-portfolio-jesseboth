@@ -21,7 +21,27 @@
  * 
 */
 #include "mbed.h"
-int string_to_int(char *str);
+
+/* get string length 
+input: 
+        string
+*/
 int string_length(char *str);
+
+/* convert string to int 
+input: 
+        str
+output:
+        int
+*/
+int string_to_int(char *str);
+
+/* string to int with known length
+input:
+        str
+        length - string length
+output:
+        int
+*/
 int string_to_int_wlen(char *str, int len);
 

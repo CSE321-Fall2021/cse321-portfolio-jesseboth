@@ -88,10 +88,10 @@
 Ticker TIME;
 CSE321_LCD LCD(LCD_COLS, LCD_ROWS, LCD_5x8DOTS, PB_9, PB_8);
 
-InterruptIn Column0(PF_14);
-InterruptIn Column1(PE_11);
-InterruptIn Column2(PE_9);
-InterruptIn Column3(PF_13);
+InterruptIn Column0(PF_14); // correlates to 147* - keypad pin 4
+InterruptIn Column1(PE_11); // correlates to 2580 - keypad pin 3
+InterruptIn Column2(PE_9);  // correlates to 369# - keypad pin 2
+InterruptIn Column3(PF_13); // correlates to ABCD - keypad pin 1
 
 char timer_flag;        // timer flag to set LCD
 char press_flag = 0;    // allows key press to function when set
@@ -318,7 +318,7 @@ int main()
         }
         /* Times Up */
         else if(state == 4){
-            /* intialize state for done */
+            /* intialize state for Times up */
             if(new_state){
                 LCD.clear();
                 if(inc_by == 1){
@@ -361,7 +361,7 @@ int main()
 
         set_row_keypad(&++row);                     // set next row                     
         delay_keypad(&press_pause, &press_flag);    // activates/deactivates blue LED
-        thread_sleep_for(10);    
+        thread_sleep_for(10);                       // sleep for 10ms
     }
 }
 

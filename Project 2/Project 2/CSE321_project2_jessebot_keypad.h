@@ -48,8 +48,37 @@
 #define PAUSE_FOR 25 //*10 ms
 #define KEYPAD_ROWS 4
 #define KEYPAD_COLS 4
+
+/* returns the key based on the input 
+input:
+        row - row on keypad
+        col - col on keypad
+output:
+        character pressed
+*/
 char get_char_keypad(char row, char col);
+
+/* turn on the specific row based on input
+input:
+        row - current row
+*/
 void set_row_keypad(char *row);
+
+/* delay keypad until pause is 0 - sets the flag
+input:
+        pause - int that decrements
+        flag - allows button to be pressed when sets
+*/
 void delay_keypad(char *pause, char *flag);
+
+/* sets the key pressed
+input: 
+        c - valid key on board
+*/
 void set_key(char c);
+
+/* get the key that was pressed 
+output:
+        key - key stored in key
+*/
 char *get_key();

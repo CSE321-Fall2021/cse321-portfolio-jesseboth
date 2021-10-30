@@ -42,7 +42,6 @@ output:
         character pressed
 */
 char get_char_keypad(char row, char col){
-    printf("%c\n", keys[row][col]);
     return keys[row][col];                  // return corresponding character
 }
 

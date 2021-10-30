@@ -44,15 +44,57 @@
 #define TIME_DELAY 500   // 5 seconds before prompt
 struct timer;
 
+
+/*
+sets values in struct
+input: 
+        m (minutes)
+        s (seconds)
+*/
 void set_timer(int m, int s);
+
+/* returns timer struct */
 struct timer get_timer();
+
+/* increments the timer*/
 void inc_timer();
+
+/* check if goal is reached
+output: 
+        goal reached t/f
+*/
 int goal_timer();
+
+/* sets string in struct and returns string
+output:
+        string mm:ss
+*/
 char *string_timer();
+
+/* convert timer string to ints */
 void int_timer();
+
+/* sets the value for incrementation 
+intput:
+        by - +1 or -1
+*/
 void set_inc_by_timer(int by);
+
+/* set the 'press_timer' string at the current
+    index with the input.
+input:
+        c - char (0-9)
+*/
 void set_press_timer(char c);
+
+/* set the press string to null */
 void reset_press_timer();
+
+/* get the timer in the correct format m:ss */
 char *output_press_timer();
+
+/* swap the goal and the current time*/
 void swap_timer();
+
+/* reset timer values */
 void reset_timer();

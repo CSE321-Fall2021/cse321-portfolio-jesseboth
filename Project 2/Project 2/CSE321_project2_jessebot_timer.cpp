@@ -65,9 +65,7 @@ struct timer get_timer(){
     return timer;
 }
 
-/* increments the timer by input
-
-*/
+/* increments the timer*/
 void inc_timer(){
     timer.seconds += timer.inc_by;        //inc seconds 
     
@@ -164,7 +162,6 @@ void set_press_timer(char c){
     else if(timer.press_i < TIMER_SET_LEN){
         timer.press[timer.press_i++] = c;       // place in placeholder string
     }
-    printf("%s\n", timer.press);
 }
 
 /* set the press string to null */
@@ -179,17 +176,17 @@ char *output_press_timer(){
     // mm:ss
     int i, cur, end, colon;  
     if(timer.press_i < TIMER_MAX_LEN){
-        i = 0;                        
-        cur = 3;
-        end = timer.press_i-1;
-        colon = 1;
+        i = 0;                  // index
+        cur = 3;                // reverse index
+        end = timer.press_i-1;  // when to stop editing string
+        colon = 1;              // colon position
 
     }
     else if(timer.press_i == TIMER_MAX_LEN){
-        i = 0;
-        cur = 4;
-        end = timer.press_i-1;
-        colon = 2;
+        i = 0;                  // index
+        cur = 4;                // reverse index
+        end = timer.press_i-1;  // when to stop editing string
+        colon = 2;              // colon position
     }
     else{
         return (char *)0;       // null
