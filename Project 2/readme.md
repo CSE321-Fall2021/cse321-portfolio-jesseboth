@@ -46,7 +46,7 @@ Resources and References
 Getting Started
 --------------------
 1. Build the Circuit
-<img src="graphics/CSE321_project2_schematic.svg">
+<img src="graphics/CSE321_project2_schematic.png">
 2. Build a new project in Mbed Studio
 3. Select the Nucleo L4R5ZI as the target
 4. Move files into Program
