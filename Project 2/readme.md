@@ -33,7 +33,7 @@ Required Materials
 - 4x4 Keypad
 - Breadboard
 - Wires
-- LEDs
+- 5 LEDs
 
 --------------------
 Resources and References
@@ -46,7 +46,7 @@ Resources and References
 Getting Started
 --------------------
 1. Build the Circuit
-<img src="Project 2/CSE321_project2_schematic.svg">
+<img src="graphics/CSE321_project2_schematic.svg">
 2. Build a new project in Mbed Studio
 3. Select the Nucleo L4R5ZI as the target
 4. Move files into Program
@@ -64,27 +64,66 @@ CSE321_project2_jessebot_main.cpp:
 Things Declared
 ----------
 
-
-* Ticker TIME
-* CSE321_LCD LCD(LCD_COLS, LCD_ROWS, LCD_5x8DOTS, PB_9, PB_8)
-* InterruptIn Column0(PF_14)
-* InterruptIn Column1(PE_11)
-* InterruptIn Column2(PE_9)
-* InterruptIn Column3(PF_13)
-* timer_flag - flag to update LCD 
-* press_flag - flag to allow a press
-* press_pause - int to delapy input
-* row - current active row 
-* new_state - flag that indicate state change
-* inc_by - increment or decrement
-* blinky - used for alarm LEDs
-* c_flag - set when 'C' is pressed
-* state - current state
-    * 0 - do nothing wait for 'D' - 'B' turns off alarm
-    * 1 - input digits m:ss, wait for A or C
-    * 2 - paused 'A' starts timer, 'B' resets
-    * 3 - count down - check for 'B'
-    * 4 - make LEDs blink;
+<pre>
+#define LCD_COLS 16
+#define LCD_ROWS 2
+</pre>
+<pre>
+Ticker TIME
+</pre>
+* Initializes timer interrupt on 1 second increments.
+<pre>
+CSE321_LCD LCD(LCD_COLS, LCD_ROWS, LCD_5x8DOTS, PB_9, PB_8)
+</pre>
+* Initialize the LCD
+<pre>
+InterruptIn Column0(PF_14)
+InterruptIn Column1(PE_11)
+InterruptIn Column2(PE_9)
+InterruptIn Column3(PF_13)
+</pre>
+* Initialize the keypress interrupts.
+<pre>
+timer_flag 
+</pre>
+* flag to update LCD 
+<pre>
+press_flag 
+</pre>
+* Flag to allow a press
+<pre>
+press_pause 
+</pre>
+* int to delapy input
+<pre>
+row 
+</pre>
+* current active row 
+<pre>
+new_state 
+</pre>
+* flag that indicate state change
+<pre>
+inc_by
+</pre> 
+* increment or decrement
+<pre>
+blinky
+</pre> 
+* used for alarm LEDs
+<pre>
+c_flag
+</pre> 
+* set when 'C' is pressed
+<pre>
+state
+</pre> 
+* Represents the current state.
+    * 0 - Do nothing wait for 'D' - 'B' turns off alarm
+    * 1 - Input digits m:ss, wait for A or C
+    * 2 - Paused 'A' starts timer, 'B' resets
+    * 3 - Count down - check for 'B'
+    * 4 - Initialize LED alarm
 
 ----------
 API and Built In Elements Used
@@ -119,6 +158,28 @@ CSE321_project2_jessebot_timer.cpp:
 ----------
 Things Declared
 ----------
+
+<pre>
+#define TIMER_MAX_LEN 4  
+</pre>
+* This is the maximum length the timer could be (mm:ss). With some code modification it could go beyond this, but the intention was to stay within the scope of the assignment.
+<pre>
+#define TIMER_SET_LEN 3
+</pre>
+* This keeps the timer to be in the format of m:ss
+<pre>
+#define TIMER_MAX_MIN 10
+</pre>
+* This is the maximum time according to the assignment.
+<pre>
+#define TIMER_LOC 6
+</pre>
+* This is the x-axis cursor position on the LCD to place the timer.
+<pre>
+#define TIME_DELAY 500
+</pre>
+* Within the main while loop the code waits for 10ms.  This time delay allows the sequential LEDs to blink for 5 seconds before another prompt is displayed.
+
 
 <pre>
 struct timer{
@@ -182,15 +243,21 @@ Things Declared
 ----------
 
 <pre>
+#define PAUSE_FOR 25 //*10 ms
+#define KEYPAD_ROWS 4
+#define KEYPAD_COLS 4
+</pre>
+
+<pre>
 keys[4][4] = { {'1', '2', '3', 'A'},
                {'4', '5', '6', 'B'}, 
                {'7', '8', '9', 'C'}, 
-               {'*', '0', '#', 'D'} };
+               {'*', '0', '#', 'D'} }
 </pre>
 * Array to determin which key was pressed 
 
 <pre>
-key[2];
+key[2]
 </pre>
 * Used to store what key was recently pressed.
 
