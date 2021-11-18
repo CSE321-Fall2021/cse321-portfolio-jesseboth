@@ -49,44 +49,78 @@
 \setcounter{secnumdepth}{-1}
 
 
-\section{Project Description}
+\section{Problem Statement}
 This system will provide additional senses to the hearing impaired.
+some people are unable to use hearing aids so this would provide an 
+alternative to hearing directly.  
+\newline
+\noindent
+Much of our environmental awareness 
+comes from our sense of hearing. This device give hearing impaired
+individuals accessibility support by allowing them to be more aware
+of their surroundings.  This device could prevent the user from 
+getting themselves into a dangerous position or provide an indication
+if someone nearby is trying to get their attention.
 The system will provide a small vibration and give a visual que
-when noise is sensed around them.  This product would be intended
-for people that are unable to use hearing aids.
-
-\subsection{What is it?}
-An alternative hearing device.
-
-\subsection{What is the Purpose?}
-It will give an indication when 
-danger may be near by or someone is trying to get their attention.
-
-\subsection{What is the Area of Application}
-The area of application is accessibility support.
-
-\subsection{How does it help?}
-This will help by providing an alternative to individuals that hearing
-aids are not an option.
-
-\section{Constraints}
+when noise is sensed around them.
 
 \section{Specifications}
+\begin{itemize}
+    \item System will detect sound.
+    \item LEDs will visually display the sound level (green, yellow, red).
+    \item Vibration motor will give feedback based on the sound level.
+    \item Can adjust the sound sensitivity via a rotary encoder. Lowering sensitivity will 
+            decrease feedback via the LEDs and vibration motor.
+    \item Implementation must use:
+    \begin{itemize}
+        \item Watchdog
+        \item Synchronization technique
+        \item At least 1 bitwise control
+        \item Critical section protection
+        \item Task/Thread
+        \item At least 1 Interrupt
+    \end{itemize}
+  \end{itemize}
+
+\section{Constraints}
+\begin{itemize}
+    \item Detect sound and will stimulate an alternative sense rather than sound.
+    \item Provide a visual and physical que that noise is nearby.
+    \item Desired sound sensitivity can be adjusted.
+    \item Toggle on and off the device.
+  \end{itemize}
 
 \section{Ask}
 \begin{itemize}
-    \item Purpose
+    \item Purpose:
+    \newline
+    Provide an alternative hearing device to hearing aids.
     \item Inputs
+    \begin{itemize}
+        \item Audio Transducer  - Detects Sound
+        \item Rotary Encoder - Adjusts the sound input levels
+        \item Onboard Button - Toggle switch
+    \end{itemize}
+
     \item Outputs
+    \begin{itemize}
+        \item LEDs - Visual sound indicator
+        \item Vibration Motor - Physical sound indicator (may need more than 1)
+    \end{itemize}
     \item Constraints
   \end{itemize}
 
 \section{BOM}
 \begin{itemize}
-    \item LEDs
-    \item Vibration Motor
-    \item Sound Sensor
-    \item Rotary Encoder
+    \item LEDs 
+    \begin{itemize}
+        \item Red
+        \item Yellow
+        \item Green
+    \end{itemize}
+    \item Vibration Motor - Oscillating motor that causes vibrations.
+    \item Audio Transducer - 
+    \item Rotary Encoder 
   \end{itemize}
 
 \end{document}
