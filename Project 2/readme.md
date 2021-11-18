@@ -8,7 +8,7 @@ time via an LCD. The user will input a time under 10 minutes with the keypad and
 the time will be displayed on the LCD along with various prompts.  
 When time is up, a series of LEDs will light up.  
 
-Contribitor List: Jesse Both
+Contributor List: Jesse Both
 
 
 --------------------
