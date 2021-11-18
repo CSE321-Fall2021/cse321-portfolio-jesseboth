@@ -22,3 +22,12 @@ Project 2 - Timer Alarm System
 -------------------
 
 This project utilizes a 4x4 keypad, and LCD and LEDs to implement an alarm system.  This system was designed with bare metal methodology.
+
+
+<br>
+
+-------------------
+Project 3 - Alternative Hearing Device
+-------------------
+
+This project utilizes a sound transducer to detect sound and converts the sound to a visual and physical representation by using LEDs and a vibration motor.
