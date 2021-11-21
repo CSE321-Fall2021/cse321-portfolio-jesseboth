@@ -101,6 +101,9 @@ public:
   void setCursor(unsigned char, unsigned char);
   int print(const char *text);
   int block(char i);
+  int clear_until(char i);
+  void displayOFF();
+  int displayCheck();
 
 
   /** Set RGB color of backlight

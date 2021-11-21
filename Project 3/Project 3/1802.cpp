@@ -20,7 +20,7 @@ void CSE321_LCD::begin() {
 
   // Initialize displayfunction parameter for setting up LCD display
   _displayfunction |= LCD_2LINE;
-  _displayfunction |= LCD_5x10DOTS;
+  _displayfunction |= _charsize;
 
 
   // Wait for more than 30 ms after power rises above 4.5V per the data sheet
@@ -72,6 +72,7 @@ void CSE321_LCD::setReg(char addr, char val) {
   char data[2];
   data[0] = addr;
   data[1] = val;
+  printf("0x%X - %d\n", addr, val);
   i2c.write(RGB_ADDRESS, data, 2);
 }
 
@@ -108,6 +109,30 @@ int CSE321_LCD::block(char i) { //output a string to the LCD
     data[1] = 255;
     i2c.write(_addr, data, 2);
     i--;
+  }
+  return 0;
+}
+
+int CSE321_LCD::clear_until(char i) { //clear i chars at current cursor position
+
+  char data[2];
+  data[0] = 0x40;
+  while (i) {
+    data[1] = 0x20;
+    i2c.write(_addr, data, 2);
+    i--;
+  }
+  return 0;
+}
+
+void CSE321_LCD::displayOFF() { 
+  _displaycontrol &= ~(LCD_DISPLAYON);
+  this->sendCommand(LCD_DISPLAYCONTROL | _displaycontrol);
+}
+
+int CSE321_LCD::displayCheck() {
+  if((_displaycontrol & LCD_DISPLAYON) == LCD_DISPLAYON){
+    return 1;
   }
   return 0;
 }
