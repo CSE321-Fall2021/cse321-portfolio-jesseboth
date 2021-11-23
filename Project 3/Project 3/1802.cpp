@@ -72,7 +72,6 @@ void CSE321_LCD::setReg(char addr, char val) {
   char data[2];
   data[0] = addr;
   data[1] = val;
-  printf("0x%X - %d\n", addr, val);
   i2c.write(RGB_ADDRESS, data, 2);
 }
 
