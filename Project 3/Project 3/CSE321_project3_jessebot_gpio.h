@@ -58,6 +58,15 @@ output:
 */
 void gpio_toggle(GPIO_TypeDef *GPIO, int pin);
 
+/* check gpio pin input
+input:
+        GPIO - GPIO port
+        pin - pin 0-15
+output:
+        true/false
+*/
+int gpio_check(GPIO_TypeDef *GPIO, int pin);
+
 /* enable ports based on string of chars 
 input:
         ports - string of chars ('AB' enables ports A and B)
