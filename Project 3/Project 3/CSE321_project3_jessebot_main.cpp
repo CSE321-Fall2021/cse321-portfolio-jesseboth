@@ -28,7 +28,7 @@
  * Sources:
  *          EventQueue: https://os.mbed.com/docs/mbed-os/v6.15/apis/eventqueue.html
  *
- * TODO: LCD updates running on seperate threads overlap -> add to event queue?
+ * TODO: 
  *      
  */
 #include "mbed.h"
@@ -43,6 +43,8 @@
 #define MAX_SEN 4
 #define BUTTON_DELAY 5
 #define SOUND_MULT .5
+#define VIB_OFFSET 0x3000
+#define VIB_MULT 0x14CC
 
 
 /*
@@ -66,8 +68,12 @@ Thread THREAD;
 Ticker DEBOUNCE;
 Ticker NOISE_CHECK;
 Ticker NOISE_RESET;
+Ticker VIBRATE;
 InterruptIn pwr(ROTARY_SW, PullUp);        // pwr button for device
 DigitalOut pwr_ind(LED1);               // on/off indicator
+
+AnalogOut vib1(PA_4);
+AnalogOut vib2(PA_5);
 
 char BUTTON_flag = 1;       // flag to debounce user button
 char but_delay = 0;
@@ -123,6 +129,16 @@ void check_sound(){
     if(lvl > show_lvl || SOUND_flag){
         SOUND_flag = 0;
         set_lvl(lvl*mult, 0, (char *)"lvl: ", MAX_LVL);
+
+        int sample = VIB_MULT * lvl + VIB_OFFSET;
+        if(lvl){
+            vib1.write_u16(sample);
+            vib2.write_u16(sample); 
+        }
+        else{
+            vib1.write_u16(0);
+            vib2.write_u16(0); 
+        }
         show_lvl = lvl;
     }
 
@@ -133,7 +149,7 @@ void clear_sound(){
     show_lvl = 0;
 }
 
-int main(){
+int main(){    
     char rot_clk, rot_dt, rot_clk_str, rot_dt_str;
     pwr_ind = 1;
     THREAD.start(callback(&EQ, &EventQueue::dispatch_forever));
@@ -176,7 +192,8 @@ int main(){
                 else if(rot_clk != rot_dt && sens<MAX_SEN){
                     sens++;
                 }
-                set_lvl(sens, 1, (char *)"Intensity: ", MAX_SEN);
+                // set_lvl(sens, 1, (char *)"Intensity: ", MAX_SEN);
+                 EQ.call(set_lvl, sens, 1,  (char *)"Intensity: ", MAX_SEN);
                 mult = sens * SOUND_MULT;
             }
             else if(!ROTARY_flag && rot_clk && rot_dt){
