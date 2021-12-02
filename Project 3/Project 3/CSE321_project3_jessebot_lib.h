@@ -22,26 +22,26 @@
 */
 #include "mbed.h"
 
-/* get string length 
+/** get string length 
 input: 
-        string
+        @param string
 */
 int string_length(char *str);
 
-/* convert string to int 
+/** convert string to int 
 input: 
-        str
+        @param str
 output:
-        int
+        @return int
 */
 int string_to_int(char *str);
 
-/* string to int with known length
+/** string to int with known length
 input:
-        str
-        length - string length
+        @param str
+        @param length - string length
 output:
-        int
+        @return int
 */
 int string_to_int_wlen(char *str, int len);
 

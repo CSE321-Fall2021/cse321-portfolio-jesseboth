@@ -27,16 +27,12 @@
  *
  * Sources:
  *          EventQueue: https://os.mbed.com/docs/mbed-os/v6.15/apis/eventqueue.html
+ *          AnalogOut: https://os.mbed.com/docs/mbed-os/v6.15/apis/analogout.html
+ *          Rotary Encoder: https://www.rcscomponents.kiev.ua/datasheets/ky-040-datasheet.pdf
  *
- * TODO: move to main:
- *          sens   
- *          ROTARY_flag
- * TODO: prevent output when !ON_flag
  */
 #include "mbed.h"
-#include "PinNames.h"
-#include "mbed_events.h"
-#include "1802.h"
+#include "edited_1802.h"
 #include "CSE321_project3_jessebot_gpio.h"
 
 #define LCD_COLS 16
@@ -61,6 +57,7 @@
 CSE321_LCD LCD(LCD_COLS, LCD_ROWS, LCD_5x10DOTS, PB_9, PB_8);
 EventQueue EQ(32 * EVENTS_EVENT_SIZE);  // queue for interrupts
 Thread THREAD;                          // thread for queue
+Thread ROTARY;                          // thread to poll for rotary input
 Ticker DEBOUNCE;                        // ticker to debounce rotary switch
 Ticker NOISE_CHECK;                     // ticker to check periodically for sound
 Ticker NOISE_RESET;                     // ticker to reset sound values
@@ -69,23 +66,26 @@ DigitalOut pwr_ind(LED1);               // on/off indicator
 AnalogOut vib1(PA_4);                   // vibration motor 1
 AnalogOut vib2(PA_5);                   // vibration motor 2
 
-char BUTTON_flag = 1;       // flag to debounce user button
-char but_delay = 0;         // set to BUTTON_DELAY and decremented
 char ON_flag = 1;           // flag determine if the system is reading audio
+char MUTE_flag = 1;         // 1 for unmuted, 0 for muted
+char BUTTON_flag = 1;       // flag to debounce user button
 char ROTARY_flag = 1;       // flag to debounce rotary encoder
-int show_lvl = 0;           // current lvl, used to reduce lcd set calls 
 char SOUND_flag = 0;        // extra flag for the case of lvl & show_lvl == 0
-int sens = 2;               // default intensity for vibration motors/lcd
-double mult = 1;            // multiplier sens*SOUND_MULT
 
-/* Shows a 'progress' bar in lcd based on inputs
+char but_delay = 0;         // set to BUTTON_DELAY and decremented
+int show_lvl = 0;           // current lvl, used to reduce lcd set calls 
+int sens = 2;               // default intensity for vibration motors/lcd
+double mult = 1.0;          // multiplier sens*SOUND_MULT
+
+/** Shows a 'progress' bar in lcd based on inputs
 input:
-        l - number of blocks to be displayed
-        row - row on lcd (0 or 1)
-        str - string before bar
-        max - max number of blocks possible
+    @param l    number of blocks to be displayed
+    @param row  row on lcd (0 or 1)
+    @param str  string before bar
+    @param max  max number of blocks possible
+
 output: 
-        displayed on LCD
+    @result     displayed on LCD
 */
 void set_lvl(int l, int row, char *str, int max){
     LCD.setCursor(0, row);
@@ -128,14 +128,16 @@ void check_sound(){
 
     if(lvl > show_lvl || SOUND_flag){
         SOUND_flag = 0;
-        set_lvl(lvl*mult, 0, (char *)"lvl: ", MAX_LVL);
 
-        int sample = VIB_MULT * lvl + (lvl>0)*VIB_OFFSET;
+        /* set lvl relative to mult and if not muted/off */
+        set_lvl(MUTE_flag*(lvl*mult), 0, (char *)"lvl: ", MAX_LVL);
+
+        /* only vibrate if not muted or lvl > 0 */
+        int sample = MUTE_flag*(VIB_MULT * lvl + (lvl>0)*VIB_OFFSET);
         vib1.write_u16(sample);
         vib2.write_u16(sample); 
         show_lvl = lvl;
     }
-
 }
 
 /* periodically sets sound values to 0 */
@@ -144,14 +146,46 @@ void clear_sound(){
     show_lvl = 0;
 }
 
-int main(){    
+void rotary_polling(){
     /* rotary variables */
     char rot_clk, rot_dt, rot_clk_str, rot_dt_str;
+    while(1){
+        rot_clk = gpio_check(ROTARY_CLK);
+        rot_dt = gpio_check(ROTARY_DT); 
 
+        /* rotation starts when clk is low */
+        if(ROTARY_flag && !rot_clk){
+            rot_clk_str = rot_clk;
+            rot_dt_str = rot_dt;
+            ROTARY_flag = 0;
+
+            /* if clk and dt low -> rotate left */
+            if(rot_clk == rot_dt && sens>0){                
+                sens--;
+            }
+            /* if clk low, dt high -> rotate right */
+            else if(rot_clk != rot_dt && sens<MAX_SEN){            
+                sens++;
+            }
+
+            /* put this on the queue to avoid data race */
+            EQ.call(set_lvl, sens, 1,  (char *)"Intensity: ", MAX_SEN);
+            mult = sens * SOUND_MULT;       // set multiplier value for lvl*mult
+            MUTE_flag = (sens > 0);         // set MUTE_flag if sens is over 0
+        }
+        /* done rotating when clk and dt are high */
+        else if(!ROTARY_flag && rot_clk && rot_dt){
+            ROTARY_flag = 1;
+        }
+    }
+}
+
+int main(){    
     pwr_ind = 1; // set system to 'on'
 
     /* start the EventQueue on an another thread */
     THREAD.start(callback(&EQ, &EventQueue::dispatch_forever));
+
     pwr.rise(EQ.event(BUTTON_rise_handler));            // button rise handler
 
     DEBOUNCE.attach(EQ.event(BUTTON_debounce), 50ms);   // ticker to debounce
@@ -161,6 +195,9 @@ int main(){
     gpio_enable((char *)"BDEF");            // enable ports BDEF
     gpio_moder(ROTARY_CLK, GPIO_INPUT);     // rotary CLK
     gpio_moder(ROTARY_DT, GPIO_INPUT);      // rotary DT
+
+    /* poll for the rotary encoder on new thread */
+    ROTARY.start(rotary_polling);
 
     /* set moder for each sound transducer */
     gpio_moder(SOUND_1, GPIO_INPUT);        
@@ -178,39 +215,13 @@ int main(){
         if(ON_flag){
             if(!LCD.displayCheck()){
                 LCD.displayON();
+                MUTE_flag = (sens > 0);
             }
-            /* #region ROTARY */
-            rot_clk = gpio_check(ROTARY_CLK);
-            rot_dt = gpio_check(ROTARY_DT);   
-
-            /* rotation starts when clk is low */
-            if(ROTARY_flag && !rot_clk){
-                rot_clk_str = rot_clk;
-                rot_dt_str = rot_dt;
-                ROTARY_flag = 0;
-
-                /** TODO: check */
-                /* if clk and dt low -> rotate left */
-                if(rot_clk == rot_dt && sens>0){
-                    sens--;
-                }
-                /* if clk low, dt high -> rotate right */
-                else if(rot_clk != rot_dt && sens<MAX_SEN){
-                    sens++;
-                }
-
-                EQ.call(set_lvl, sens, 1,  (char *)"Intensity: ", MAX_SEN);
-                mult = sens * SOUND_MULT;       // set multiplier value for lvl*mult
-            }
-            /* done rotating when clk and dt are low */
-            else if(!ROTARY_flag && rot_clk && rot_dt){
-                ROTARY_flag = 1;
-            }
-            /* #endregion ROTARY */
         }
         else{
             if(LCD.displayCheck()){
                 LCD.displayOFF();
+                MUTE_flag = 0;
             }
         }
     }

@@ -1,4 +1,23 @@
-#include "1802.h"
+/**
+ * @brief   
+ *  * function to place full blocks (0xFF) in each positon relative to i.
+ *  int block(char i);
+ *
+ *  * starts at current cursor and clears (places space) at each positon
+ *  * realtive to i
+ *  int clear_until(char i);
+ *
+ *  * turns the display off
+ *  void displayOFF();
+ *
+ *  * checks if display is on or off
+ *  int displayCheck();
+ *
+ *  These modifications were done by adjusting pre-existing funtcions.
+**/
+
+
+#include "edited_1802.h"
 #include "mbed.h"
 
 // modified from https://os.mbed.com/users/Yar/code/CSE321_LCD_for_Nucleo/

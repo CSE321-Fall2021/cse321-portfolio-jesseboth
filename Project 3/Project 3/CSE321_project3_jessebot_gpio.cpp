@@ -25,53 +25,55 @@
 */
 #include "CSE321_project3_jessebot_gpio.h"
 
-/* turn gpio pin off
+/** turn gpio pin off
 input: 
-        GPIO - GPIO port
-        pin - pin 0-15
+        @param GPIO GPIO port     
+        @param pin pin within GPIO port
 output:
-        gpio deactivate
+        @result gpio deactivate
 */
 void gpio_off(GPIO_TypeDef *GPIO, int pin){
     GPIO->ODR &= ~(1<<pin);
 }
 
-/* turn on gpio pin
+/** turn on gpio pin
 input:
-        GPIO - GPIO port
-        pin - pin 0-15
+        @param GPIO GPIO port     
+        @param pin pin within GPIO port
 output:
-        gpio activate
+        @result gpio activate
 */
 void gpio_on(GPIO_TypeDef *GPIO, int pin){
     GPIO->ODR |= (1<<pin);
 }
 
-/* toggle gpio pin
+/** toggle gpio pin
 input:
-        GPIO - GPIO port
-        pin - pin 0-15
+        @param GPIO GPIO port     
+        @param pin pin within GPIO port
 output:
-        gpio on/off
+        @result gpio on/off
 */
 void gpio_toggle(GPIO_TypeDef *GPIO, int pin){
     GPIO->ODR ^= (1<<pin);
 }
 
-/* check gpio pin input
+/** check gpio pin input
 input:
-        GPIO - GPIO port
-        pin - pin 0-15
+        @param GPIO GPIO port     
+        @param pin pin within GPIO port
 output:
-        true/false
+        @return true/false
 */
 int gpio_check(GPIO_TypeDef *GPIO, int pin){
    return (GPIO->IDR & (1<<pin))>>pin;
 }
 
-/* enable ports based on string of chars 
+/** enable ports based on string of chars 
 input:
-        ports - string of chars ('AB' enables ports A and B)
+        @param ports string of chars ('AB' enables ports A and B)
+output:
+        @result enables all ports from ports string
 */
 void gpio_enable(char *ports){
     int length = string_length(ports);
@@ -80,11 +82,18 @@ void gpio_enable(char *ports){
     }
 }
 
-/* set the moder (set values define in header)
+/** set the moder (set values define in header)
 input:
-        GPIO - GPIO port
-        pin - pin 0-15
-        set - mode
+        @param GPIO GPIO port     
+        @param pin pin within GPIO port
+        @param set mode
+                @see GPIO_INPUT
+                @see GPIO_OUTPUT
+                @see GPIO_ALTERNATE
+                @see GPIO_ANALOG
+
+output:
+        @result sets pin to correct mode relateive to set
 */
 void gpio_moder(GPIO_TypeDef *GPIO, char pin, char set){
     GPIO->MODER &= ~((set^0x3)<<(pin*2));   // set 0 bits
