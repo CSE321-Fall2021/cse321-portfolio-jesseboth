@@ -11,10 +11,10 @@
  * Subroutines: 
  *              gpio_off(GPIO_TypeDef *GPIO, int pin)
  *              gpio_on(GPIO_TypeDef *GPIO, int pin)
+ *              gpio_toggle(GPIO_TypeDef *GPIO, int pin)
+ *              gpio_check(GPIO_TypeDef *GPIO, int pin)
  *              gpio_enable(char *ports)
  *              gpio_moder(GPIO_TypeDef *GPIO, char pin, char set)
- *              gpio_sequential(int blink)
- *              gpio_sequential_off()
  * 
  * Global Vars: N/A
  *              
@@ -80,14 +80,3 @@ input:
         set - mode
 */
 void gpio_moder(GPIO_TypeDef *GPIO, char pin, char set);
-
-/* make LEDs bink sequentially 
-input: 
-        blink - value that indicates which led to light up
-output:
-        LEDs
-*/
-void gpio_sequential(int blink);
-
-/* turns off all sequential related LEDs*/
-void gpio_sequential_off();
