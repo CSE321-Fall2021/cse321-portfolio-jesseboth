@@ -124,12 +124,12 @@ int CSE321_LCD::clear_until(char i) { //clear i chars at current cursor position
   return 0;
 }
 
-void CSE321_LCD::displayOFF() { 
+void CSE321_LCD::displayOFF() {  // Turn off display
   _displaycontrol &= ~(LCD_DISPLAYON);
   this->sendCommand(LCD_DISPLAYCONTROL | _displaycontrol);
 }
 
-int CSE321_LCD::displayCheck() {
+int CSE321_LCD::displayCheck() { // checks if display is on (true) or off (false)
   if((_displaycontrol & LCD_DISPLAYON) == LCD_DISPLAYON){
     return 1;
   }
