@@ -1,6 +1,6 @@
 /**
  * Author: Jesse Both
- * Date: 11/19/2021
+ * Date: 11/30/2021
  *
  * Assignment:  Project 3
  *              Alternative Hearing Device
@@ -28,8 +28,10 @@
  * Sources:
  *          EventQueue: https://os.mbed.com/docs/mbed-os/v6.15/apis/eventqueue.html
  *
- * TODO: 
- *      
+ * TODO: move to main:
+ *          sens   
+ *          ROTARY_flag
+ * TODO: prevent output when !ON_flag
  */
 #include "mbed.h"
 #include "PinNames.h"
@@ -39,57 +41,52 @@
 
 #define LCD_COLS 16
 #define LCD_ROWS 2
-#define MAX_LVL 10
-#define MAX_SEN 4
-#define BUTTON_DELAY 5
-#define SOUND_MULT .5
-#define VIB_OFFSET 0x3000
-#define VIB_MULT 0x14CC
+#define MAX_LVL 10          // 10 bars for lvl
+#define MAX_SEN 4           // 4 bars for intensity
+#define BUTTON_DELAY 5      // *50ms
+#define SOUND_MULT .5       // sound multipler value
+#define ROTARY_CLK GPIOD, 5 // Rotary CLK 
+#define ROTARY_DT GPIOD, 6  // Rotary DT
+#define ROTARY_SW PD_7      // Rotary SW
 
+#define SOUND_1 GPIOE, 3    // pin for 1st sound transducer
+#define SOUND_2 GPIOF, 8    // pin for 2nd sound transducer
+#define SOUND_3 GPIOF, 7    // pin for 3rd sound transducer
+#define SOUND_4 GPIOF, 9    // pin for 4th sound transducer
+#define SOUND_5 GPIOG, 1    // pin for 5th sound transducer
 
-/*
-PD_5: CLk
-PD_6: DT
-PD_7: SW
-*/
-#define ROTARY_CLK GPIOD, 5
-#define ROTARY_DT GPIOD, 6
-#define ROTARY_SW PD_7
-
-#define SOUND_1 GPIOE, 3
-#define SOUND_2 GPIOF, 8
-#define SOUND_3 GPIOF, 7
-#define SOUND_4 GPIOF, 9
-#define SOUND_5 GPIOG, 1
+#define VIB_OFFSET 0x3000   // lowest value for vibration
+#define VIB_MULT 0x14CC     // (0xFFFF - VIB_OFFSET)/MAX_LVL
 
 CSE321_LCD LCD(LCD_COLS, LCD_ROWS, LCD_5x10DOTS, PB_9, PB_8);
-EventQueue EQ(32 * EVENTS_EVENT_SIZE);
-Thread THREAD;
-Ticker DEBOUNCE;
-Ticker NOISE_CHECK;
-Ticker NOISE_RESET;
-Ticker VIBRATE;
-InterruptIn pwr(ROTARY_SW, PullUp);        // pwr button for device
+EventQueue EQ(32 * EVENTS_EVENT_SIZE);  // queue for interrupts
+Thread THREAD;                          // thread for queue
+Ticker DEBOUNCE;                        // ticker to debounce rotary switch
+Ticker NOISE_CHECK;                     // ticker to check periodically for sound
+Ticker NOISE_RESET;                     // ticker to reset sound values
+InterruptIn pwr(ROTARY_SW, PullUp);     // pwr button for device
 DigitalOut pwr_ind(LED1);               // on/off indicator
-
-AnalogOut vib1(PA_4);
-AnalogOut vib2(PA_5);
+AnalogOut vib1(PA_4);                   // vibration motor 1
+AnalogOut vib2(PA_5);                   // vibration motor 2
 
 char BUTTON_flag = 1;       // flag to debounce user button
-char but_delay = 0;
+char but_delay = 0;         // set to BUTTON_DELAY and decremented
 char ON_flag = 1;           // flag determine if the system is reading audio
 char ROTARY_flag = 1;       // flag to debounce rotary encoder
-int show_lvl = 0;
-char SOUND_flag = 0;
-int sens = 2;
-double mult = 1;
+int show_lvl = 0;           // current lvl, used to reduce lcd set calls 
+char SOUND_flag = 0;        // extra flag for the case of lvl & show_lvl == 0
+int sens = 2;               // default intensity for vibration motors/lcd
+double mult = 1;            // multiplier sens*SOUND_MULT
 
-/* #region  TESTING */
-int here=0;
-/* #endregion */ 
-
-
-
+/* Shows a 'progress' bar in lcd based on inputs
+input:
+        l - number of blocks to be displayed
+        row - row on lcd (0 or 1)
+        str - string before bar
+        max - max number of blocks possible
+output: 
+        displayed on LCD
+*/
 void set_lvl(int l, int row, char *str, int max){
     LCD.setCursor(0, row);
     LCD.print(str);
@@ -100,15 +97,17 @@ void set_lvl(int l, int row, char *str, int max){
     LCD.clear_until(max - l);
 }
 
+/* Periodically called, debounces button*/
 void BUTTON_debounce(){
     if(!BUTTON_flag && !but_delay){
         BUTTON_flag = 1;
     }
-    else{
+    else if(but_delay > 0){
         but_delay--;
     }
 }
 
+/* "turns off" the system to the user */
 void BUTTON_rise_handler(){  
     if(BUTTON_flag){
         ON_flag ^= 1;
@@ -118,6 +117,7 @@ void BUTTON_rise_handler(){
     }
 }
 
+/* periodically checks which sound transuducers are currently on */
 void check_sound(){
     int lvl = 0;
     lvl += gpio_check(SOUND_1);
@@ -130,44 +130,46 @@ void check_sound(){
         SOUND_flag = 0;
         set_lvl(lvl*mult, 0, (char *)"lvl: ", MAX_LVL);
 
-        int sample = VIB_MULT * lvl + VIB_OFFSET;
-        if(lvl){
-            vib1.write_u16(sample);
-            vib2.write_u16(sample); 
-        }
-        else{
-            vib1.write_u16(0);
-            vib2.write_u16(0); 
-        }
+        int sample = VIB_MULT * lvl + (lvl>0)*VIB_OFFSET;
+        vib1.write_u16(sample);
+        vib2.write_u16(sample); 
         show_lvl = lvl;
     }
 
 }
 
+/* periodically sets sound values to 0 */
 void clear_sound(){
     SOUND_flag = 1;
     show_lvl = 0;
 }
 
 int main(){    
+    /* rotary variables */
     char rot_clk, rot_dt, rot_clk_str, rot_dt_str;
-    pwr_ind = 1;
+
+    pwr_ind = 1; // set system to 'on'
+
+    /* start the EventQueue on an another thread */
     THREAD.start(callback(&EQ, &EventQueue::dispatch_forever));
-    pwr.rise(EQ.event(BUTTON_rise_handler));
-    DEBOUNCE.attach(EQ.event(BUTTON_debounce), 50ms);
-    NOISE_CHECK.attach(EQ.event(check_sound), 10ms);
-    NOISE_RESET.attach(EQ.event(clear_sound), 500ms);
+    pwr.rise(EQ.event(BUTTON_rise_handler));            // button rise handler
 
-    gpio_enable((char *)"BDEF");
-    gpio_moder(ROTARY_CLK, GPIO_INPUT);       // rotary CLK
-    gpio_moder(ROTARY_DT, GPIO_INPUT);       // rotary DT
+    DEBOUNCE.attach(EQ.event(BUTTON_debounce), 50ms);   // ticker to debounce
+    NOISE_CHECK.attach(EQ.event(check_sound), 10ms);    // ticker to check for sound
+    NOISE_RESET.attach(EQ.event(clear_sound), 500ms);   // ticker to reset noise count
 
-    gpio_moder(SOUND_1, GPIO_INPUT);
+    gpio_enable((char *)"BDEF");            // enable ports BDEF
+    gpio_moder(ROTARY_CLK, GPIO_INPUT);     // rotary CLK
+    gpio_moder(ROTARY_DT, GPIO_INPUT);      // rotary DT
+
+    /* set moder for each sound transducer */
+    gpio_moder(SOUND_1, GPIO_INPUT);        
     gpio_moder(SOUND_2, GPIO_INPUT);
     gpio_moder(SOUND_3, GPIO_INPUT);
     gpio_moder(SOUND_4, GPIO_INPUT);
     gpio_moder(SOUND_5, GPIO_INPUT);
 
+    /* initialize LCD */
     LCD.begin();
     set_lvl(3, 0, (char *)"lvl: ", MAX_LVL);
     set_lvl(sens, 1, (char *)"Intensity: ", MAX_SEN);
@@ -179,23 +181,28 @@ int main(){
             }
             /* #region ROTARY */
             rot_clk = gpio_check(ROTARY_CLK);
-            rot_dt = gpio_check(ROTARY_DT);
+            rot_dt = gpio_check(ROTARY_DT);   
 
+            /* rotation starts when clk is low */
             if(ROTARY_flag && !rot_clk){
                 rot_clk_str = rot_clk;
                 rot_dt_str = rot_dt;
                 ROTARY_flag = 0;
 
+                /** TODO: check */
+                /* if clk and dt low -> rotate left */
                 if(rot_clk == rot_dt && sens>0){
                     sens--;
                 }
+                /* if clk low, dt high -> rotate right */
                 else if(rot_clk != rot_dt && sens<MAX_SEN){
                     sens++;
                 }
-                // set_lvl(sens, 1, (char *)"Intensity: ", MAX_SEN);
-                 EQ.call(set_lvl, sens, 1,  (char *)"Intensity: ", MAX_SEN);
-                mult = sens * SOUND_MULT;
+
+                EQ.call(set_lvl, sens, 1,  (char *)"Intensity: ", MAX_SEN);
+                mult = sens * SOUND_MULT;       // set multiplier value for lvl*mult
             }
+            /* done rotating when clk and dt are low */
             else if(!ROTARY_flag && rot_clk && rot_dt){
                 ROTARY_flag = 1;
             }
