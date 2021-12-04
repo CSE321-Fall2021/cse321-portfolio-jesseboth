@@ -25,6 +25,8 @@
 /** get string length 
 input: 
         @param string
+output: 
+        @return integer for string length
 */
 int string_length(char *str);
 
