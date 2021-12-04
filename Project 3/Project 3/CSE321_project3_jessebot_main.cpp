@@ -5,28 +5,77 @@
  * Assignment:  Project 3
  *              Alternative Hearing Device
  *
- * Purpose:     To provide an alternative form of hearing
- *              for the hearing impaired.
+ * Purpose: To provide an alternative form of hearing
+ *          for the hearing impaired.
  *
  * Inputs:
  *          - Audio Transducer
  *          - Rotary Encoder
- *          - Onboard Button
+ *          - Rotary Encoder switch
  * Outputs:
- *          - LEDs
+ *          - LCD
  *          - Vibration Motor
+ *          - Onboard LED
  *
  * Constraints:
  *          - Detect sound and will stimulate an alternative sense rather than sound.
  *          - Provide a visual and physical que that noise is nearby.
- *          -  Desired sound sensitivity can be adjusted.
+ *          - Desired sound sensitivity can be adjusted.
  *          - Toggle on and off the device.
+ * 
+ * Internal Elements:
+ *          - Watchdog
+ *          - Synchronizaiton - Flags
+ *          - Critial Section Protection
+ *          - Mutliple Threads
+ *          - Interrupts
+ * 
+ * External Files:
+ *          mbed.h
+ *          edited_1802.h/cpp
+ *          CSE321_project3_jessebot_gpio.h/cpp
+ *          CSE321_project3_jessebot_lib.h/cpp
  *
- * Subroutines:
- *              main()
- *
+ * Subroutines: 
+ *          set_lvl(int l, int row, char *str, int max)
+ *          BUTTON_debounce()
+ *          BUTTON_rise_handler()
+ *          check_sound()
+ *          clear_sound()
+ *          rotary_polling()
+ *          main()
+ * 
+ * Globals:
+ *          Objects:
+ *              CSE321 LCD          - LCD class
+ *              EventQueue EQ       - queue for interrupt eventse
+ *              Thread THREAD       - thread for EQ
+ *              Thread ROTARY       - thread for rotary encoder polling
+ *              Ticker DEBOUNCE     - ticker to debounce the switch
+ *              Ticker NOISE_CHECK  - periodically check for sound
+ *              Ticker NOISE_RESET  - resets the noise values to resample
+ *              InterruptIn pwr     - system 'power' button
+ *              DigitalOut pwr_ind  - onboard led power indicator
+ *              AnalogOut vib1      - vibration motor 1
+ *              AnalogOut vib2      - vibration motor 2
+ *              
+ *          Flags:
+ *              ON_flag     - determines if the system is 'on'
+ *              MUTE_flag   - determines if the systems is not muted or muted
+ *              BUTTON_flag - debounces the button
+ *              ROTARY_flag - debouces the rotary encoder
+ *              SOUND_flag  - flag in the case of lvl == 0
+ * 
+ *          Variables:
+ *              but_delay   - value to delay the next button press
+ *              show_lvl    - reduces LCD jitter
+ *              sens        - intensity value
+ *              mult        - multiplier for intensity
+ *            
+ *              
  * Sources:
  *          EventQueue: https://os.mbed.com/docs/mbed-os/v6.15/apis/eventqueue.html
+ *          Watchdog: https://os.mbed.com/docs/mbed-os/v6.15/apis/watchdog.html
  *          AnalogOut: https://os.mbed.com/docs/mbed-os/v6.15/apis/analogout.html
  *          Rotary Encoder: https://www.rcscomponents.kiev.ua/datasheets/ky-040-datasheet.pdf
  *
@@ -41,6 +90,9 @@
 #define MAX_SEN 4           // 4 bars for intensity
 #define BUTTON_DELAY 5      // *50ms
 #define SOUND_MULT .5       // sound multipler value
+
+#define POWER_INDICATOR LED1
+
 #define ROTARY_CLK GPIOD, 5 // Rotary CLK 
 #define ROTARY_DT GPIOD, 6  // Rotary DT
 #define ROTARY_SW PD_7      // Rotary SW
@@ -51,8 +103,13 @@
 #define SOUND_4 GPIOF, 9    // pin for 4th sound transducer
 #define SOUND_5 GPIOG, 1    // pin for 5th sound transducer
 
+#define VIBRATE_1 PA_4      // pin 1 for vibration motor
+#define VIBRATE_2 PA_5      // pin 2 for vibration motor
 #define VIB_OFFSET 0x3000   // lowest value for vibration
 #define VIB_MULT 0x14CC     // (0xFFFF - VIB_OFFSET)/MAX_LVL
+
+#define TIMEOUT_MS 5000     // Watchdog timeout
+#define feed kick           // We don't kick doggos
 
 CSE321_LCD LCD(LCD_COLS, LCD_ROWS, LCD_5x10DOTS, PB_9, PB_8);
 EventQueue EQ(32 * EVENTS_EVENT_SIZE);  // queue for interrupts
@@ -62,9 +119,9 @@ Ticker DEBOUNCE;                        // ticker to debounce rotary switch
 Ticker NOISE_CHECK;                     // ticker to check periodically for sound
 Ticker NOISE_RESET;                     // ticker to reset sound values
 InterruptIn pwr(ROTARY_SW, PullUp);     // pwr button for device
-DigitalOut pwr_ind(LED1);               // on/off indicator
-AnalogOut vib1(PA_4);                   // vibration motor 1
-AnalogOut vib2(PA_5);                   // vibration motor 2
+DigitalOut pwr_ind(POWER_INDICATOR);    // on/off indicator
+AnalogOut vib1(VIBRATE_1);              // vibration motor 1
+AnalogOut vib2(VIBRATE_2);              // vibration motor 2
 
 char ON_flag = 1;           // flag determine if the system is reading audio
 char MUTE_flag = 1;         // 1 for unmuted, 0 for muted
@@ -133,7 +190,7 @@ void check_sound(){
         set_lvl(MUTE_flag*(lvl*mult), 0, (char *)"lvl: ", MAX_LVL);
 
         /* only vibrate if not muted or lvl > 0 */
-        int sample = MUTE_flag*(VIB_MULT * lvl + (lvl>0)*VIB_OFFSET);
+        int sample = MUTE_flag*(VIB_MULT * (lvl*mult) + (lvl>0)*VIB_OFFSET);
         vib1.write_u16(sample);
         vib2.write_u16(sample); 
         show_lvl = lvl;
@@ -144,6 +201,7 @@ void check_sound(){
 void clear_sound(){
     SOUND_flag = 1;
     show_lvl = 0;
+    Watchdog::get_instance().feed();  // reset watchdog timer
 }
 
 void rotary_polling(){
@@ -191,6 +249,9 @@ int main(){
     DEBOUNCE.attach(EQ.event(BUTTON_debounce), 50ms);   // ticker to debounce
     NOISE_CHECK.attach(EQ.event(check_sound), 10ms);    // ticker to check for sound
     NOISE_RESET.attach(EQ.event(clear_sound), 500ms);   // ticker to reset noise count
+
+    Watchdog &watchdog = Watchdog::get_instance();
+    watchdog.start(TIMEOUT_MS);
 
     gpio_enable((char *)"BDEF");            // enable ports BDEF
     gpio_moder(ROTARY_CLK, GPIO_INPUT);     // rotary CLK
