@@ -1,10 +1,10 @@
 /**
  * @brief   
- *  * function to place full blocks (0xFF) in each positon relative to i.
+ *  * function to place full blocks (0xFF) in each position relative to i.
  *  int block(char i);
  *
- *  * starts at current cursor and clears (places space) at each positon
- *  * realtive to i
+ *  * starts at current cursor and clears (places space) at each position
+ *  * relative to i
  *  int clear_until(char i);
  *
  *  * turns the display off
