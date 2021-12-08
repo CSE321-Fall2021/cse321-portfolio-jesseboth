@@ -1,0 +1,207 @@
+% TODO: Outcome, program diagram
+
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{fancyhdr}
+\usepackage{tabto}
+\usepackage[font=small,skip=0pt]{caption}
+\pagestyle{fancy}
+
+\fancyhead[LE,RO]{Jesse Both}
+\fancyhead[LO,RE]{Project 3}
+
+
+\hypersetup{
+    colorlinks,
+    citecolor=black,
+    filecolor=black,
+    linkcolor=black,
+    urlcolor=black
+}
+\graphicspath{ {/graphics/} }
+\title{\Huge{\textbf{CSE 321}  \\* Project 3 \\~\\ \textbf{Alternative Hearing \\* Device}}}
+
+\date{} %remove date from make title
+
+%image
+% \begin{figure}[h!]
+%   \begin{center}
+%     \includegraphics[height=5cm]{graphics/().png}
+%   \end{center}
+%   \caption{CAPTION}
+%   \label{fig:LABEL}
+% \end{figure}
+
+% \begin{itemize}
+%     \item Bullet 1
+%     \item Bullet 2
+%   \end{itemize}
+
+
+% Title Page
+\begin{document}
+    \pagenumbering{gobble}
+    \setcounter{secnumdepth}{-1}
+    \maketitle
+    \vfill 
+    {\Large\centering\textbf{Jesse Both  \\~\\}\par}
+
+    {\Large\centering{Fall 2021}\par}
+    {\large\centering{\today}\par}
+
+    \newpage
+    \begin{center}
+        \tableofcontents
+    \end{center}
+\newpage
+
+
+\pagenumbering{arabic}
+\section{Introduction}
+In many cases, people that are hard of hearing are unable to use hearing aids for various reasons.  This device can give people an alternative way of being more aware of their surroundings.  It does not replace being able to hear, but it can make the user more aware of what is happening around them.
+
+\section{Requirements}
+Find a solution to an accessibility problem.  The systems needs to utilize the LCD, an external output (vibration motors), and an external input (sound transducer, rotary encoder)
+
+\section{Overview}
+The device uses an array of sound transducers to read an audio level.  A rotary encoder has the ability to change the intensity rating that is output through the LCD and vibration motors.  The switch on the rotary encoder can be used to turn the system on and off.  There is an onboard LED that indicates when the system is on.
+\subsection{Specifications}
+\begin{itemize}
+    \item System can detect sound at several levels.
+    \item Rotary encoder can adjust intensity level.    
+    \item LCD will display sound level based on set intensity level.
+    \item Vibration motor gives feedback based on the set intensity level.
+    \item A button is available to turn the system on and off.
+\end{itemize}
+
+\section{Elements Incorporated}
+\subsection{Watchdog}
+The purpose of the watchdog is to reset the system if a fault occurs.
+The watchdog timer needs to be reset periodically to tell the system that a fault has not happened. The watchdog has a constant timeout value.  If the watchdog is not 'fed' before the timeout has been reached then the entire system will reset.  The watchdog can prevent major issues in real life if the program gets hung up somewhere, it will reset the system.
+
+The watchdog was initialized and was 'fed' every half second to reset its timer.  The 'feeding' took place in a preexisting Ticker interrupt because it already existed for the sound transducer. 
+
+\subsection{Synchronization}
+The purpose of synchronization is to keep the system in sync and only changes values when necessary.
+Flags were used to keep the system in sync.  When specific flags were set the system will behave accordingly.  For the LCD, the levels only changed if there was a change in value.  This reduced the flicker that could appear on the LCD.
+
+\subsection{Bitwise Control}
+Bitwise control was done inside the gpio.cpp file.  All of the configurations was done by bit shifting, or, and, xor.  These functions were used for reading from the sound transducers and reading from the rotary encoder.
+
+\subsection{Critical Section}
+Critical section protection is important because the program can not access and/or change memory at the same time across threads.  There is not a major adjustment in the system in order to protect the critical section, but it is something that was in mind during development.  The goal was to prevent any potential data races and to prevent deadlock. 
+
+\subsection{Threads}
+Threads allow the system to run different parts of the program in parallel to one another. This allows two pieces of the program to run at the same time, so one part does not have to wait for the other to finish. A thread was used to handle the EventQueue calls. Another thread was used to implement the polling of the rotary encoder rotation.
+
+\subsection{Interrupts}
+Interrupts are an implementation to allow a program to be manipulated with hardware.
+When a condition is met for an interrupt, the main thread is paused and the interrupt handler is called on a separate thread.
+Several ticker interrupts were used along with an interrupt for the switch on the rotary encoder.
+
+\subsection{Development}
+Before development could begin, some exploration took place to figure out how each peripheral worked.  
+
+Starting with the rotary encoder, it was found that the clk and dt were active low.  When rotating left, clk and dt will both be low.  When rotating right, only clk will be low and dt will remain high.  The rotation step is done when clk and dt are both high again.  The rotary encoder has an additional pin, sw, that is a momentary push button.
+
+The next device that was explored was the sound transducer.  This peripheral can only detect sound, it can not give the level of the sound.  The point at which the transducer detects sound is determined by the potentiometer that is attached.  Due to the lack of sound levels, it was chosen to use five sound transducers in order to get five levels of sound and the potentiometers were set accordingly.
+
+For the vibration motors, analogOut was required in order to give them the appropriate vibration intensity based on the input sound level.  Analog out has 0x0-0xFFFF (16 bits) of output levels, 0xFFFF being 3.3V.  It was determined that the minimum output value for the vibration motor to spin was around 0x3000. In order to get ten output levels the difference of the max, 0xFFFF and offset, 0x3000 divided by ten, provided a valued of 0x14CC.
+
+All of this information was utilized in order to create a working prototype.
+
+
+\section{Block Diagram}
+    \begin{figure}[h!]
+    \begin{center}
+        \includegraphics[height=8cm]{graphics/block_diagram.png}
+    \end{center}
+    \caption{Block Diagram}
+    \label{fig:Block}
+    \end{figure}
+
+\section{Diagram}
+-
+\section{BOM}
+    \begin{itemize}
+        \item Audio Transducer              \tab [x5]
+        \item Rotary Encoder with switch    \tab [x1]
+        \item 16x2 LCD                      \tab [x1] 
+        \item Vibration Motor               \tab [x2] 
+    \end{itemize}
+    *The system is able to be tested with less than the required amounts, but ground unused pins.
+
+\section{User Instructions}
+\begin{enumerate}
+    \item Turn system on and off with button on intensity knob.
+    \item Increase intensity with intensity knob.
+    \item Hold vibration motors in hand.
+    \item Make noise to verify the device works.
+    \item A readout of the intensity and sound level is displayed on LCD.
+\end{enumerate}
+
+\newpage
+\section{Schematic}
+    \begin{figure}[h!]
+        \begin{center}
+            \includegraphics[height=10cm]{graphics/Schematic.png}
+        \end{center}
+        \caption{Schematic}
+        \label{fig:Schematic}
+    \end{figure}
+
+\section{Instructions}
+\subsection{Building}
+\begin{enumerate}
+    \item Set the audio transducer potentiometers to the appropriate settings.
+    \item Place audio transducers on bread board (order does not matter).
+    \item Connect power and ground to corresponding pin on audio transducer.
+    \item Connect out pin to corresponding pins on the Nucleo from - Figure \ref{fig:Schematic}.
+    \item Place rotary encoder in bread board and connect power and ground.
+    \item Connect SW, DT and CLK to corresponding pins - Figure \ref{fig:Schematic}.
+    \item Connect vibration motor to ground and corresponding pins - Figure \ref{fig:Schematic}.
+    \item Connect LCD power and ground.
+    \item Connect LCD SDA and SCL to corresponding pins - Figure \ref{fig:Schematic}.
+\end{enumerate}
+
+
+\subsection{Using}
+\begin{enumerate}
+    \item Turn system on and off with button on rotary encoder.
+    \item Increase intensity level with rotary encoder.
+    \item Vibration motors output intensity based on sound level and intensity level.
+    \item Make noise to verify the device works.
+    \item Set intensity and sound level is displayed on LCD.
+\end{enumerate}
+
+\section{Test Plan}
+    To verify the system works, everything will be assembled according to spec.  The order of test will be as follows:
+    \begin{enumerate}
+    \item Verify power button.
+        \begin{itemize}
+            \item Make sure no output is produced when off.
+            \item Power indicator should be on/off.
+        \end{itemize}
+    \item Verify the intensity level increases and decreases corresponding to the rotary encoder input.
+        \begin{itemize}
+            \item It is assumed that the LCD works.
+            \item Intensity should not go out of the bounds of [0,4]
+        \end{itemize}
+    \item Verify vibration motors by creating different sound levels.
+        \begin{itemize}
+            \item Intensity level should be adjusted to make sure sound levels of the same value can provide more intensity at higher levels.
+        \end{itemize}
+    \end{enumerate}
+\section{Outcome}
+The system works as it was expected.
+
+\section{Future Consideration}
+\subsection{Shortfalls}
+The sound transducers could have been a microphone in order get a more diverse sound range.  This would have allowed a rounder curve for the vibration motor output as opposed to the specified 10 levels of intensity.
+
+\subsection{Improvements}
+Directional output from several vibration motors could be added into the system.  The sound input would have to be adjusted to be able to read from several directions and vibration could occur indicating which direction the sound is coming from.
+
+\end{document}
