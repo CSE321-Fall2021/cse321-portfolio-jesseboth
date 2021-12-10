@@ -118,7 +118,7 @@ Thread ROTARY;                          // thread to poll for rotary input
 Ticker DEBOUNCE;                        // ticker to debounce rotary switch
 Ticker NOISE_CHECK;                     // ticker to check periodically for sound
 Ticker NOISE_RESET;                     // ticker to reset sound values
-InterruptIn pwr(ROTARY_SW);     // pwr button for device
+InterruptIn pwr(ROTARY_SW);             // pwr button for device
 DigitalOut pwr_ind(POWER_INDICATOR);    // on/off indicator
 AnalogOut vib1(VIBRATE_1);              // vibration motor 1
 AnalogOut vib2(VIBRATE_2);              // vibration motor 2
