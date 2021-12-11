@@ -1,5 +1,3 @@
-% TODO: Outcome, program diagram
-
 \documentclass{article}
 \usepackage[utf8]{inputenc}
 \usepackage{graphicx}
@@ -121,9 +119,16 @@ All of this information was utilized in order to create a working prototype.
     \caption{Block Diagram}
     \label{fig:Block}
     \end{figure}
-
+\newpage
 \section{Diagram}
--
+\begin{figure}[h!]
+    \begin{center}
+        \includegraphics[height=12cm]{graphics/diagram.png}
+    \end{center}
+    \caption{Block Diagram}
+    \label{fig:Block}
+\end{figure}
+
 \section{BOM}
     \begin{itemize}
         \item Audio Transducer              \tab [x5]
@@ -167,7 +172,7 @@ All of this information was utilized in order to create a working prototype.
 \end{enumerate}
 
 
-\subsection{Using}
+\subsection{Usage}
 \begin{enumerate}
     \item Turn system on and off with button on rotary encoder.
     \item Increase intensity level with rotary encoder.
@@ -195,7 +200,11 @@ All of this information was utilized in order to create a working prototype.
         \end{itemize}
     \end{enumerate}
 \section{Outcome}
-The system works as it was expected.
+\begin{enumerate}
+    \item The power button works as it should. No output occurs when 'off'.
+    \item Intensity level increases corresponding to rotary encoder input.
+    \item Vibration motor vibrates with an intensity relative to the sound level and intensity setting.
+\end{enumerate}
 
 \section{Future Consideration}
 \subsection{Shortfalls}
